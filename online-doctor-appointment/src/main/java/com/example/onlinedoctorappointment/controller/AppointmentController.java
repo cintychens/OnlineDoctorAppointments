@@ -7,6 +7,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(
+        name = "Appointment Management",
+        description = "APIs for creating, managing, and tracking appointment lifecycle"
+)
 @RestController
 @RequestMapping("/api/appointments")
 public class AppointmentController {
@@ -33,11 +40,14 @@ public class AppointmentController {
      * Create appointment
      * POST /api/appointments
      */
+    @Operation(
+            summary = "Create a new appointment",
+            description = "Patient creates an appointment by selecting an available doctor time slot and optionally providing notes"
+    )
     @PostMapping
     public Appointment createAppointment(
             @RequestBody CreateAppointmentRequest req) {
 
-        // Assemble entity inside controller
         Appointment appointment = new Appointment();
         appointment.setPatientId(req.patientId);
         appointment.setTimeSlotId(req.timeSlotId);
@@ -50,6 +60,10 @@ public class AppointmentController {
      * Get all appointments
      * GET /api/appointments
      */
+    @Operation(
+            summary = "Get all appointments",
+            description = "Retrieve all appointments in the system"
+    )
     @GetMapping
     public List<Appointment> getAllAppointments() {
         return appointmentService.getAllAppointments();
@@ -59,6 +73,10 @@ public class AppointmentController {
      * Cancel appointment (User)
      * PUT /api/appointments/{id}/cancel
      */
+    @Operation(
+            summary = "Cancel an appointment",
+            description = "Patient cancels a pending or approved appointment"
+    )
     @PutMapping("/{id}/cancel")
     public Appointment cancelAppointment(@PathVariable Long id) {
         return appointmentService.cancelAppointment(id);
@@ -68,15 +86,23 @@ public class AppointmentController {
      * Approve appointment (Doctor / Admin)
      * PUT /api/appointments/{id}/approve
      */
+    @Operation(
+            summary = "Approve an appointment",
+            description = "Doctor or administrator approves a pending appointment"
+    )
     @PutMapping("/{id}/approve")
     public Appointment approveAppointment(@PathVariable Long id) {
         return appointmentService.approveAppointment(id);
     }
 
     /**
-     * 2.6 Reschedule appointment
+     * Reschedule appointment
      * PUT /api/appointments/{id}/reschedule?newTimeSlotId=xx
      */
+    @Operation(
+            summary = "Reschedule an appointment",
+            description = "Patient reschedules an existing appointment by selecting a new available time slot"
+    )
     @PutMapping("/{id}/reschedule")
     public Appointment rescheduleAppointment(
             @PathVariable Long id,
@@ -89,12 +115,24 @@ public class AppointmentController {
      * Get appointments by status
      * GET /api/appointments/status/{status}
      */
+    @Operation(
+            summary = "Get appointments by status",
+            description = "Retrieve appointments filtered by appointment status"
+    )
     @GetMapping("/status/{status}")
     public List<Appointment> getByStatus(
             @PathVariable AppointmentStatus status) {
 
         return appointmentService.getAppointmentsByStatus(status);
     }
+
+    /**
+     * Get upcoming appointments
+     */
+    @Operation(
+            summary = "Get upcoming appointments",
+            description = "Retrieve all upcoming appointments with status PENDING or APPROVED"
+    )
     @GetMapping("/upcoming")
     public List<Appointment> getUpcomingAppointments() {
         return appointmentService.getAppointmentsByStatusList(
@@ -105,6 +143,13 @@ public class AppointmentController {
         );
     }
 
+    /**
+     * Get appointments by patient
+     */
+    @Operation(
+            summary = "Get appointments by patient",
+            description = "Retrieve all appointments for a specific patient"
+    )
     @GetMapping("/patient/{patientId}")
     public List<Appointment> getAppointmentsByPatient(
             @PathVariable Long patientId) {
@@ -112,6 +157,13 @@ public class AppointmentController {
         return appointmentService.getAppointmentsByPatient(patientId);
     }
 
+    /**
+     * Get appointment history
+     */
+    @Operation(
+            summary = "Get appointment history",
+            description = "Retrieve historical appointments with status CANCELLED or REJECTED"
+    )
     @GetMapping("/history")
     public List<Appointment> getHistoryAppointments() {
         return appointmentService.getAppointmentsByStatusList(
@@ -121,5 +173,4 @@ public class AppointmentController {
                 )
         );
     }
-
 }

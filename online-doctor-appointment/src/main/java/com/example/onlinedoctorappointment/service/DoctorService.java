@@ -3,6 +3,8 @@ package com.example.onlinedoctorappointment.service;
 import com.example.onlinedoctorappointment.entity.Doctor;
 import com.example.onlinedoctorappointment.repository.DoctorRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -15,22 +17,30 @@ public class DoctorService {
         this.doctorRepository = doctorRepository;
     }
 
-    /** Admin: create doctor */
+    /**
+     * Admin: create doctor
+     */
     public Doctor createDoctor(Doctor doctor) {
         return doctorRepository.save(doctor);
     }
 
-    /** User: view available doctors */
+    /**
+     * User: view available doctors
+     */
     public List<Doctor> getAvailableDoctors() {
         return doctorRepository.findByEnabledTrue();
     }
 
-    /** User: filter by specialty */
+    /**
+     * User: filter by specialty
+     */
     public List<Doctor> getDoctorsBySpecialty(String specialty) {
         return doctorRepository.findBySpecialtyAndEnabledTrue(specialty);
     }
 
-    /** Admin: update doctor */
+    /**
+     * Admin: update doctor
+     */
     public Doctor updateDoctor(Long id, Doctor updatedDoctor) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Doctor not found"));
@@ -43,7 +53,9 @@ public class DoctorService {
         return doctorRepository.save(doctor);
     }
 
-    /** Admin: disable doctor */
+    /**
+     * Admin: disable doctor
+     */
     public Doctor disableDoctor(Long id) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Doctor not found"));
@@ -52,8 +64,19 @@ public class DoctorService {
         return doctorRepository.save(doctor);
     }
 
-    /** Admin: delete doctor */
+    /**
+     * Admin: delete doctor
+     */
+
     public void deleteDoctor(Long id) {
-        doctorRepository.deleteById(id);
+        Doctor doctor = doctorRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Doctor not found"
+                        )
+                );
+
+        doctorRepository.delete(doctor);
     }
 }
