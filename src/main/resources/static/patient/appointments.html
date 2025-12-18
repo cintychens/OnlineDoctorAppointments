@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Appointments</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <h2 class="page-title">My Appointments</h2>
+
+    <div class="nav">
+        <a href="/patient/index.html">Home</a>
+        <a href="/patient/dashboard.html">Book Appointment</a>
+        <a href="/auth/login.html">Logout</a>
+    </div>
+
+    <div class="card">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Doctor</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody id="apptTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    if (!user || user.role !== "PATIENT") {
+        alert("Unauthorized");
+        window.location.href = "/auth/login.html";
+    }
+
+    function loadAppointments() {
+        fetch(`/api/appointments/patient/${user.id}`)
+            .then(res => res.json())
+            .then(list => {
+                const tbody = document.getElementById("apptTable");
+                tbody.innerHTML = "";
+                list.forEach(a => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `

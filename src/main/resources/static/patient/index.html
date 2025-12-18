@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Patient Home</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <h2 class="page-title">Patient Home</h2>
+
+    <div class="nav">
+        <a href="/patient/dashboard.html">Dashboard</a>
+        <a href="/patient/appointments.html">My Appointments</a>
+        <a href="/auth/login.html">Logout</a>
+    </div>
+
+    <div class="card">
+        <h3>Welcome</h3>
+        <p>
+            This system allows you to browse doctors, book appointments,
+            and manage your medical consultation schedule.
+        </p>
+    </div>
+
+    <div class="card">
+        <h3>Quick Actions</h3>
+        <ul>
+            <li><a href="/patient/dashboard.html">Book a new appointment</a></li>
+            <li><a href="/patient/appointments.html">View appointment history</a></li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    if (!user || user.role !== "PATIENT") {
+        alert("Unauthorized");
+        window.location.href = "/auth/login.html";
+    }
+</script>
+
+</body>
+</html>

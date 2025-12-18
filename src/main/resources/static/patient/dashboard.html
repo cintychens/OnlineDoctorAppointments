@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Patient Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <h2 class="page-title">Book Appointment</h2>
+
+    <div class="nav">
+        <a href="/patient/index.html">Home</a>
+        <a href="/patient/appointments.html">My Appointments</a>
+        <a href="/auth/login.html">Logout</a>
+    </div>
+
+    <div class="card">
+        <h3>Select Doctor</h3>
+        <select id="doctorSelect" onchange="loadSlots()"></select>
+    </div>
+
+    <div class="card">
+        <h3>Available Time Slots</h3>
+        <select id="slotSelect"></select>
+    </div>
+
+    <div class="card">
+        <h3>Note (Optional)</h3>
+        <input type="text" id="note" placeholder="Reason or note">
+        <br><br>
+        <button class="btn btn-primary" onclick="createAppointment()">Book Appointment</button>
+    </div>
+</div>
+
+<script>
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    if (!user || user.role !== "PATIENT") {
+        alert("Unauthorized");
+        window.location.href = "/auth/login.html";
+    }
+
+    function loadDoctors() {
+        fetch("/api/doctors")
+            .then(res => res.json())
+            .then(doctors => {
+                const sel = document.getElementById("doctorSelect");
+                sel.innerHTML = "";
+                doctors.forEach(d => {
+                    const opt = document.createElement("option");
+                    opt.value = d.id;
+                    opt.text = d.name + " (" + d.specialty + ")";
+                    sel.appendChild(opt);
+                });
+                loadSlots();
+            });
+    }
+
+    function loadSlots() {
+        const doctorId = document.getElementById("doctorSelect").value;
+        fetch(`/api/timeslots/doctor/${doctorId}/available`)
+            .then(res => res.json())
+            .then(slots => {
+                const sel = document.getElementById("slotSelect");
+                sel.innerHTML = "";
+                slots.forEach(s => {
+                    const opt = document.createElement("option");
+                    opt.value = s.id;
+                    opt.text = s.startTime + " → " + s.endTime;
+                    sel.appendChild(opt);
+                });
+            });
+    }
+
+    function createAppointment() {
+        fetch("/api/appointments", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                patientId: user.id,
+                timeSlotId: document.getElementById("slotSelect").value,
+                note: document.getElementById("note").value
+            })
+        }).then(() => {
+            alert("Appointment created");
+            window.location.href = "/patient/appointments.html";
+        });
+    }
+
+    loadDoctors();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,399 @@
+/* =========================
+   Auth 页面专用样式
+   仅用于 Login / Register
+   ========================= */
+
+/* 页面整体居中容器 */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+/* 主认证容器 */
+.auth-container {
+    display: flex;
+    width: 100%;
+    max-width: 1200px;
+    min-height: 700px;
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+     position: relative;
+}
+
+/* =========================
+   左侧装饰区
+   ========================= */
+.auth-decoration {
+    flex: 1;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 60px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.auth-decoration .logo i {
+    font-size: 48px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.auth-decoration .logo h1 {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.auth-decoration .tagline {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+/* 功能亮点 */
+.features {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.feature i {
+    font-size: 22px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.feature h3 {
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.feature p {
+    font-size: 14px;
+    opacity: 0.85;
+}
+/* =========================
+   Register 页角色按钮（左侧）
+   ========================= */
+
+.role-info {
+    margin-top: 40px;
+}
+
+.role-info h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* 每一个角色 = 可点击按钮卡片 */
+.role-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding: 16px 18px;
+    border-radius: 14px;
+
+    cursor: pointer;
+    transition: all 0.25s ease;
+
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid transparent;
+
+    margin-bottom: 12px;
+}
+
+/* hover 效果 */
+.role-option:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateX(4px);
+}
+
+/* 选中态（按钮高亮） */
+.role-option.active {
+    background: rgba(255, 255, 255, 0.35);
+    border-color: white;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* 左侧图标 */
+.role-option i {
+    font-size: 24px;
+}
+
+/* 文本 */
+.role-option h4 {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.role-option p {
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+/* =========================
+   右侧表单区
+   ========================= */
+.auth-form {
+    flex: 1;
+    padding: 60px 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 表单头部 */
+.form-header {
+    margin-bottom: 40px;
+}
+
+.form-header h2 {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.form-header p {
+    color: var(--gray-500);
+    font-size: 16px;
+}
+
+/* =========================
+   输入框
+   ========================= */
+.input-group {
+    margin-bottom: 22px;
+}
+
+.input-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 8px;
+}
+
+.input-with-icon {
+    position: relative;
+}
+
+.input-with-icon input,
+.input-with-icon select {
+    width: 100%;
+    padding: 16px 48px 16px 16px;
+    border: 2px solid var(--gray-200);
+    border-radius: 12px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+}
+
+.input-with-icon input:focus,
+.input-with-icon select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* 图标 */
+.input-icon {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+}
+
+.password-toggle {
+    position: absolute;
+    right: 44px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--gray-400);
+    cursor: pointer;
+}
+
+/* =========================
+   登录 / 注册按钮
+   ========================= */
+.btn-login,
+.btn-register {
+    width: 100%;
+    padding: 18px;
+    margin-top: 10px;
+    border-radius: 12px;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    color: white;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    transition: all 0.3s ease;
+}
+
+.btn-login:hover,
+.btn-register:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* =========================
+   表单辅助项
+   ========================= */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.forgot-link {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--primary);
+}
+
+.forgot-link:hover {
+    text-decoration: underline;
+}
+
+/* =========================
+   页脚
+   ========================= */
+.auth-footer {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--gray-600);
+}
+
+.auth-footer a {
+    color: var(--primary);
+    font-weight: 600;
+}
+/* ===== 右下角角色切换按钮 ===== */
+
+.role-indicator {
+    position: absolute;
+    right: 30px;
+    bottom: 30px;
+    display: flex;
+    gap: 12px;
+
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    padding: 10px 14px;
+    border-radius: 999px;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    z-index: 10;
+}
+
+/* 单个角色按钮 */
+.role-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 10px 16px;
+    border-radius: 999px;
+
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+
+    cursor: pointer;
+    transition: all 0.25s ease;
+
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+/* hover 效果 */
+.role-item:hover {
+    background: #f3f4f6;
+}
+
+/* 当前选中角色 */
+.role-item.active {
+    background: #2563eb;
+    color: white;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+/* 图标颜色同步 */
+.role-item i {
+    font-size: 16px;
+}
+
+.role-item.active i {
+    color: white;
+}
+
+/* =========================
+   错误 / 成功提示
+   ========================= */
+.error-message,
+.success-message {
+    padding: 16px;
+    border-radius: 12px;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.error-message {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.success-message {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+/* =========================
+   响应式
+   ========================= */
+@media (max-width: 992px) {
+    .auth-container {
+        flex-direction: column;
+        max-width: 500px;
+    }
+
+    .auth-decoration {
+        padding: 40px 30px;
+    }
+
+    .auth-form {
+        padding: 40px 30px;
+    }
+}
+
+@media (max-width: 576px) {
+    .auth-form {
+        padding: 30px 20px;
+    }
+}

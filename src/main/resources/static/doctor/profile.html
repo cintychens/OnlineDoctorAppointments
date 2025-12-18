@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctor Profile | MedCare</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/doctor.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+<nav class="top-nav">
+    <div class="nav-brand">
+        <i class="fas fa-user-md"></i>
+        <span>Doctor Dashboard</span>
+    </div>
+    <div class="nav-user">
+        <span id="doctorName">Doctor</span>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+</nav>
+
+<div class="doctor-container">
+
+    <!-- ✅ 统一 Side Menu -->
+    <aside class="side-menu">
+        <ul>
+            <li><a href="/doctor/dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="/doctor/appointments.html"><i class="fas fa-calendar-check"></i> Appointments</a></li>
+            <li><a href="/doctor/schedule.html"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+            <li class="active"><a href="/doctor/profile.html"><i class="fas fa-user"></i> Profile</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+
+        <!-- ===== Profile ===== -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-user"></i> Doctor Profile</h2>
+            </div>
+
+            <div class="card-body">
+
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" class="form-input" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Role</label>
+                    <input type="text" id="role" class="form-input" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="name" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label>Specialty</label>
+                    <select id="specialty" class="form-input">
+                        <option value="">-- Select Specialty --</option>
+                        <option>General Medicine</option>
+                        <option>Cardiology</option>
+                        <option>Dermatology</option>
+                        <option>Pediatrics</option>
+                        <option>Neurology</option>
+                        <option>Psychiatry</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Doctor Description</label>
+                    <textarea id="description" class="form-input" rows="4"
+                              placeholder="Brief introduction, experience, expertise..."></textarea>
+                </div>
+
+                <button class="btn-primary" onclick="saveProfile()">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== Change Password ===== -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-key"></i> Change Password</h2>
+            </div>
+
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="oldPassword" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPassword" class="form-input">
+                </div>
+
+                <button class="btn-primary" onclick="changePassword()">
+                    <i class="fas fa-key"></i> Update Password
+                </button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const user = JSON.parse(localStorage.getItem("currentUser"));
+        if (!user || user.role !== "DOCTOR") {
+            location.href = "/auth/login.html";
+            return;
+        }
+
+        document.getElementById("doctorName").innerText = user.name || user.username;
+
+        document.getElementById("username").value = user.username || "";
+        document.getElementById("role").value = user.role || "";
+        document.getElementById("name").value = user.name || "";
+        document.getElementById("email").value = user.email || "";
+        document.getElementById("specialty").value = user.specialty || "";
+        document.getElementById("description").value = user.description || "";
+    });
+
+    function saveProfile() {
+        const user = JSON.parse(localStorage.getItem("currentUser"));
+        user.name = document.getElementById("name").value;
+        user.email = document.getElementById("email").value;
+        user.specialty = document.getElementById("specialty").value;
+        user.description = document.getElementById("description").value;
+
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        alert("Profile updated successfully!");
+    }
+
+    function changePassword() {
+        const user = JSON.parse(localStorage.getItem("currentUser"));
+
+        if (document.getElementById("oldPassword").value !== user.password) {
+            alert("Current password incorrect");
+            return;
+        }
+        if (document.getElementById("newPassword").value.length < 6) {
+            alert("Password must be at least 6 characters");
+            return;
+        }
+        if (document.getElementById("newPassword").value !==
+            document.getElementById("confirmPassword").value) {
+            alert("Passwords do not match");
+            return;
+        }
+
+        user.password = document.getElementById("newPassword").value;
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        alert("Password updated!");
+    }
+
+    function logout() {
+        localStorage.removeItem("currentUser");
+        location.href = "/auth/login.html";
+    }
+</script>
+
+</body>
+</html>

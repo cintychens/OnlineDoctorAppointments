@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctor Dashboard | MedCare</title>
+
+    <!-- Global styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/doctor.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+<!-- ================= Top Navigation ================= -->
+<nav class="top-nav">
+    <div class="nav-brand">
+        <i class="fas fa-user-md"></i>
+        <span>Doctor Dashboard</span>
+    </div>
+
+    <div class="nav-user">
+        <span id="doctorName">Doctor</span>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+</nav>
+
+<!-- ================= Main Layout ================= -->
+<div class="doctor-container">
+
+    <!-- ===== Side Menu ===== -->
+    <aside class="side-menu">
+        <ul>
+            <li class="active">
+                <a href="/doctor/dashboard.html">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="/doctor/appointments.html">
+                    <i class="fas fa-calendar-check"></i> Appointments
+                </a>
+            </li>
+            <li>
+                <a href="/doctor/schedule.html">
+                    <i class="fas fa-calendar-alt"></i> Schedule
+                </a>
+            </li>
+            <li>
+                <a href="/doctor/profile.html">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- ================= Main Content ================= -->
+    <main class="main-content">
+
+        <!-- ===== Welcome Card ===== -->
+        <div class="welcome-card">
+            <h1>Welcome, <span id="welcomeName"></span></h1>
+            <p>Today is <span id="currentDate"></span></p>
+        </div>
+
+        <!-- ===== Stats ===== -->
+        <div class="stats-container">
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <h3>Today's Appointments</h3>
+                <div class="stat-number" id="todayCount">0</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3>Pending Requests</h3>
+                <div class="stat-number" id="pendingCount">0</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Total Appointments</h3>
+                <div class="stat-number" id="totalCount">0</div>
+            </div>
+
+        </div>
+
+        <!-- ===== Today's Appointments ===== -->
+        <div class="card">
+            <div class="card-header">
+                <h2>
+                    <i class="fas fa-calendar-day"></i>
+                    Today's Appointments
+                </h2>
+                <a href="/doctor/appointments.html" class="btn-secondary">
+                    View All
+                </a>
+            </div>
+
+            <div class="card-body">
+                <table class="simple-table">
+                    <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Patient</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody id="todayAppointmentsBody">
+                    <!-- filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ================= Scripts ================= -->
+<script src="/js/doctor.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // ===== 登录校验 =====
+        const user = JSON.parse(localStorage.getItem("currentUser"));
+        if (!user || user.role !== "DOCTOR") {
+            location.href = "/auth/login.html";
+            return;
+        }
+
+        // ===== Profile 信息实时同步 =====
+        document.getElementById("doctorName").innerText =
+            user.name || user.username || "Doctor";
+
+        document.getElementById("welcomeName").innerText =
+            user.name || user.username || "Doctor";
+
+        document.getElementById("currentDate").innerText =
+            new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+
+        renderDashboardData();
+    });
+
+    function renderDashboardData() {
+        const STORAGE_KEY = "doctor_appointments";
+        const list = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        const today = new Date().toISOString().split("T")[0];
+
+        // ===== 统计 =====
+        const todayAppointments = list.filter(a => a.date === today);
+        const pendingAppointments = list.filter(a => a.status === "pending");
+
+        document.getElementById("todayCount").innerText =
+            todayAppointments.length;
+
+        document.getElementById("pendingCount").innerText =
+            pendingAppointments.length;
+
+        document.getElementById("totalCount").innerText =
+            list.length;
+
+        // ===== 今日预约表格 =====
+        const tbody = document.getElementById("todayAppointmentsBody");
+        tbody.innerHTML = "";
+
+        if (todayAppointments.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align:center;color:#888;">
+                        No appointments today
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        todayAppointments.forEach(a => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${a.time}</td>
+                <td>${a.patientName}</td>
+                <td>${a.reason}</td>
+                <td>${a.status}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function logout() {
+        if (confirm("Are you sure you want to logout?")) {
+            localStorage.removeItem("currentUser");
+            location.href = "/auth/login.html";
+        }
+    }
+</script>
+
+</body>
+</html>

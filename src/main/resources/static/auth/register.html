@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register | Medical System</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="auth-page">
+<div class="auth-container">
+
+    <!-- ================= 左侧装饰 & 角色选择 ================= -->
+    <div class="auth-decoration">
+        <div class="logo">
+            <i class="fas fa-heartbeat"></i>
+            <h1>Join MedCare</h1>
+            <p class="tagline">Start your healthcare journey</p>
+        </div>
+
+        <div class="role-info">
+            <h3><i class="fas fa-user-tag"></i> Choose Your Role</h3>
+
+            <div class="role-option active" data-role="PATIENT">
+                <i class="fas fa-user-injured"></i>
+                <div>
+                    <h4>Patient</h4>
+                    <p>Book appointments, view history</p>
+                </div>
+            </div>
+
+            <div class="role-option" data-role="DOCTOR">
+                <i class="fas fa-user-md"></i>
+                <div>
+                    <h4>Doctor</h4>
+                    <p>Manage schedule, view patients</p>
+                </div>
+            </div>
+
+            <div class="role-option" data-role="ADMIN">
+                <i class="fas fa-user-shield"></i>
+                <div>
+                    <h4>Administrator</h4>
+                    <p>System management</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 右侧注册表单 ================= -->
+    <div class="auth-form">
+        <div class="form-header">
+            <h2>Create Account</h2>
+            <p>Fill in your details below</p>
+        </div>
+
+        <form id="registerForm" onsubmit="register(); return false;">
+
+            <div class="input-group">
+                <label><i class="fas fa-user"></i> Username</label>
+                <div class="input-with-icon">
+                    <input type="text" id="username" placeholder="Choose a username" required>
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label><i class="fas fa-lock"></i> Password</label>
+                <div class="input-with-icon">
+                    <input type="password" id="password" placeholder="Create a strong password" required>
+                    <i class="fas fa-lock input-icon"></i>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label><i class="fas fa-lock"></i> Confirm Password</label>
+                <div class="input-with-icon">
+                    <input type="password" id="confirmPassword" placeholder="Re-enter your password" required>
+                    <i class="fas fa-lock input-icon"></i>
+                </div>
+            </div>
+
+            <!-- 🔒 隐藏字段：角色由左侧控制 -->
+            <input type="hidden" id="role" value="PATIENT">
+
+            <div class="form-options">
+                <label class="checkbox-container">
+                    <input type="checkbox" required>
+                    <span class="checkmark"></span>
+                    I agree to the Terms & Conditions and Privacy Policy
+                </label>
+            </div>
+
+            <button type="submit" class="btn-register">
+                <span>Create Account</span>
+                <i class="fas fa-user-plus"></i>
+            </button>
+
+            <div class="auth-footer">
+                <p>Already have an account?
+                    <a href="/auth/login.html">Sign In</a>
+                </p>
+            </div>
+        </form>
+
+        <div id="msg" class="error-message"></div>
+    </div>
+</div>
+
+<!-- ================= JS ================= -->
+<script>
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const roleInput = document.getElementById('role');
+    const msg = document.getElementById('msg');
+
+    /* 左侧角色点击 */
+    document.querySelectorAll('.role-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const role = option.dataset.role;
+
+            document.querySelectorAll('.role-option')
+                .forEach(o => o.classList.remove('active'));
+            option.classList.add('active');
+
+            roleInput.value = role;
+        });
+    });
+
+    /* 默认选中 Patient */
+    document.querySelector('.role-option[data-role="PATIENT"]').click();
+
+    function register() {
+        if (passwordInput.value !== confirmPasswordInput.value) {
+            msg.className = 'error-message';
+            msg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Passwords do not match';
+            return;
+        }
+
+        fetch(`/api/users/register?username=${encodeURIComponent(usernameInput.value)}&password=${encodeURIComponent(passwordInput.value)}&role=${roleInput.value}`, {
+            method: 'POST'
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Registration failed');
+            return res.json();
+        })
+        .then(() => {
+            msg.className = 'success-message';
+            msg.innerHTML = '<i class="fas fa-check-circle"></i> Registration successful!';
+            setTimeout(() => location.href = '/auth/login.html', 1500);
+        })
+        .catch(err => {
+            msg.className = 'error-message';
+            msg.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${err.message}`;
+        });
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Doctors</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <h1>Online Doctor Appointment - Admin</h1>
+    <div class="nav">
+        <a href="/admin/dashboard.html">Dashboard</a>
+        <a href="/admin/manage-doctors.html">Manage Doctors</a>
+        <a href="/auth/login.html">Logout</a>
+    </div>
+</div>
+
+<!-- Main -->
+<div class="container">
+
+    <h2 class="page-title">Doctor Management</h2>
+
+    <!-- Create Doctor -->
+    <div class="card">
+        <h3 class="section-title">Create New Doctor</h3>
+
+        <div class="form-group">
+            <label>Doctor Name</label>
+            <input type="text" placeholder="Enter doctor name">
+        </div>
+
+        <div class="form-group">
+            <label>Specialty</label>
+            <input type="text" placeholder="e.g. Cardiology">
+        </div>
+
+        <button class="btn btn-primary">Create Doctor</button>
+    </div>
+
+    <!-- Doctor List -->
+    <div class="card">
+        <h3 class="section-title">Doctor List</h3>
+
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Specialty</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>1</td>
+                <td>Dr. Smith</td>
+                <td>Cardiology</td>
+                <td>Enabled</td>
+                <td>
+                    <button class="btn btn-secondary">Disable</button>
+                    <button class="btn btn-danger">Delete</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<div class="footer">
+    © 2025 Online Doctor Appointment System
+</div>
+
+</body>
+</html>

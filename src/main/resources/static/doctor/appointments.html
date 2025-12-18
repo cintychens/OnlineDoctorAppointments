@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Appointments | Doctor Dashboard</title>
+
+    <!-- Global styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/doctor.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+<!-- ================= Top Navigation ================= -->
+<nav class="top-nav">
+    <div class="nav-brand">
+        <i class="fas fa-user-md"></i>
+        <span>Doctor Dashboard</span>
+    </div>
+
+    <div class="nav-user">
+        <span id="doctorName">Doctor</span>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+</nav>
+
+<!-- ================= Main Layout ================= -->
+<div class="doctor-container">
+
+    <!-- ===== Side Menu ===== -->
+    <aside class="side-menu">
+        <ul>
+            <li>
+                <a href="/doctor/dashboard.html">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="active">
+                <a href="/doctor/appointments.html">
+                    <i class="fas fa-calendar-check"></i> Appointments
+                </a>
+            </li>
+            <li>
+                <a href="/doctor/schedule.html">
+                    <i class="fas fa-calendar-alt"></i> Schedule
+                </a>
+            </li>
+            <li>
+                <a href="/doctor/profile.html">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- ================= Main Content ================= -->
+    <main class="main-content">
+
+        <!-- ===== Page Header ===== -->
+        <div class="card">
+            <div class="card-body">
+                <h2>
+                    <i class="fas fa-calendar-check"></i>
+                    Appointments
+                </h2>
+                <p>View and manage patient appointment requests</p>
+            </div>
+        </div>
+
+        <!-- ===== Filters ===== -->
+        <div class="card">
+            <div class="card-body form-row">
+                <div class="form-group">
+                    <label>Status</label>
+                    <select class="form-input" id="filterStatus">
+                        <option value="ALL">All</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" class="form-input" id="filterDate">
+                </div>
+
+                <div class="form-group" style="align-self: flex-end;">
+                    <button class="btn-primary" onclick="applyAppointmentFilter()">
+                        <i class="fas fa-filter"></i> Apply
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Appointments Table ===== -->
+        <div class="card">
+            <div class="card-body">
+
+                <table class="simple-table">
+                    <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="appointmentsBody">
+                    <!-- rendered by doctor.js -->
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ================= Scripts ================= -->
+<script src="/js/doctor.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const user = JSON.parse(localStorage.getItem("currentUser"));
+        if (!user || user.role !== "DOCTOR") {
+            location.href = "/auth/login.html";
+            return;
+        }
+
+        document.getElementById("doctorName").innerText =
+            user.name || user.username || "Doctor";
+
+        // ✅ 正确的渲染函数
+        renderAppointmentsTable("appointmentsBody");
+    });
+</script>
+
+
+</body>
+</html>
