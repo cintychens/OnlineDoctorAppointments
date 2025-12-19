@@ -47,11 +47,6 @@
                 </a>
             </li>
             <li>
-                <a href="/doctor/schedule.html">
-                    <i class="fas fa-calendar-alt"></i> Schedule
-                </a>
-            </li>
-            <li>
                 <a href="/doctor/profile.html">
                     <i class="fas fa-user"></i> Profile
                 </a>
@@ -115,13 +110,12 @@
                     <tr>
                         <th>Time</th>
                         <th>Patient</th>
-                        <th>Reason</th>
+                        <th>Doctor</th>
                         <th>Status</th>
                     </tr>
                     </thead>
-                    <tbody id="todayAppointmentsBody">
-                    <!-- filled by JS -->
-                    </tbody>
+                    <!-- 由 doctor.js 统一渲染 -->
+                    <tbody id="todayAppointmentsBody"></tbody>
                 </table>
             </div>
         </div>
@@ -131,85 +125,20 @@
 
 <!-- ================= Scripts ================= -->
 <script src="/js/doctor.js"></script>
+
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        // ===== 登录校验 =====
-        const user = JSON.parse(localStorage.getItem("currentUser"));
-        if (!user || user.role !== "DOCTOR") {
-            location.href = "/auth/login.html";
-            return;
-        }
 
-        // ===== Profile 信息实时同步 =====
-        document.getElementById("doctorName").innerText =
-            user.name || user.username || "Doctor";
-
-        document.getElementById("welcomeName").innerText =
-            user.name || user.username || "Doctor";
-
-        document.getElementById("currentDate").innerText =
-            new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric"
-            });
-
-        renderDashboardData();
-    });
-
-    function renderDashboardData() {
-        const STORAGE_KEY = "doctor_appointments";
-        const list = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-
-        const today = new Date().toISOString().split("T")[0];
-
-        // ===== 统计 =====
-        const todayAppointments = list.filter(a => a.date === today);
-        const pendingAppointments = list.filter(a => a.status === "pending");
-
-        document.getElementById("todayCount").innerText =
-            todayAppointments.length;
-
-        document.getElementById("pendingCount").innerText =
-            pendingAppointments.length;
-
-        document.getElementById("totalCount").innerText =
-            list.length;
-
-        // ===== 今日预约表格 =====
-        const tbody = document.getElementById("todayAppointmentsBody");
-        tbody.innerHTML = "";
-
-        if (todayAppointments.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="4" style="text-align:center;color:#888;">
-                        No appointments today
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        todayAppointments.forEach(a => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td>${a.time}</td>
-                <td>${a.patientName}</td>
-                <td>${a.reason}</td>
-                <td>${a.status}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
+    /* =================================================
+     * Logout
+     * ================================================= */
     function logout() {
-        if (confirm("Are you sure you want to logout?")) {
-            localStorage.removeItem("currentUser");
-            location.href = "/auth/login.html";
-        }
+    if (confirm("Are you sure you want to logout?")) {
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("current_doctor"); // ⭐ 必须
+        location.href = "/auth/login.html";
     }
+}
+
 </script>
 
 </body>

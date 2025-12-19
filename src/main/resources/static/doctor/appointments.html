@@ -47,11 +47,6 @@
                 </a>
             </li>
             <li>
-                <a href="/doctor/schedule.html">
-                    <i class="fas fa-calendar-alt"></i> Schedule
-                </a>
-            </li>
-            <li>
                 <a href="/doctor/profile.html">
                     <i class="fas fa-user"></i> Profile
                 </a>
@@ -73,7 +68,7 @@
             </div>
         </div>
 
-        <!-- ===== Filters ===== -->
+        <!-- ===== Filters（UI only） ===== -->
         <div class="card">
             <div class="card-body form-row">
 
@@ -82,9 +77,9 @@
                     <select class="form-input" id="filterStatus">
                         <option value="ALL">All</option>
                         <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
+                        <option value="confirmed">Confirmed</option>
                         <option value="rejected">Rejected</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="completed">Completed</option>
                     </select>
                 </div>
 
@@ -94,7 +89,7 @@
                 </div>
 
                 <div class="form-group" style="align-self: flex-end;">
-                    <button class="btn-primary" onclick="applyAppointmentFilter()">
+                    <button class="btn-primary" onclick="applyDoctorAppointmentFilter()">
                         <i class="fas fa-filter"></i> Apply
                     </button>
                 </div>
@@ -117,9 +112,8 @@
                     </tr>
                     </thead>
 
-                    <tbody id="appointmentsBody">
-                    <!-- rendered by JS -->
-                    </tbody>
+                    <!-- ⚠️ tbody 由 doctor.js 统一渲染 -->
+                    <tbody id="appointmentsBody"></tbody>
                 </table>
 
             </div>
@@ -129,116 +123,20 @@
 </div>
 
 <!-- ================= Scripts ================= -->
-<script>
-    /* ================= Init ================= */
-    let currentDoctor = null;
-    let allAppointments = [];
+<script src="/js/doctor.js"></script>
 
-    document.addEventListener("DOMContentLoaded", () => {
-        const user = JSON.parse(localStorage.getItem("currentUser"));
-        if (!user || user.role !== "DOCTOR") {
-            location.href = "/auth/login.html";
-            return;
-        }
-
-        currentDoctor = user;
-        document.getElementById("doctorName").innerText =
-            user.name || user.username || "Doctor";
-
-        loadAppointments();
-    });
-
-    /* ================= Load ================= */
-    function loadAppointments() {
-        allAppointments =
-            JSON.parse(localStorage.getItem("doctor_appointments")) || [];
-
-        // 只显示当前医生的预约
-        const myList = allAppointments.filter(a =>
-            a.doctorName === (currentDoctor.name || currentDoctor.username)
-        );
-
-        renderAppointments(myList);
-    }
-
-    /* ================= Render ================= */
-    function renderAppointments(list) {
-        const tbody = document.getElementById("appointmentsBody");
-        tbody.innerHTML = "";
-
-        if (list.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="5" style="text-align:center;color:#888;">
-                        No appointments found.
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        list.forEach(a => {
-            const tr = document.createElement("tr");
-
-            tr.innerHTML = `
-                <td>${a.patientName}</td>
-                <td>${a.date}</td>
-                <td>${a.time}</td>
-                <td>
-                    <span style="color:${statusColor(a.status)};font-weight:600;">
-                        ${a.status}
-                    </span>
-                </td>
-                <td>
-                    ${renderActions(a)}
-                </td>
-            `;
-
-            tbody.appendChild(tr);
-        });
-    }
-
-    /* ================= Actions ================= */
-    function renderActions(a) {
-        if (a.status !== "pending") {
-            return `<span style="color:#888;">—</span>`;
-        }
-
-        return `
-            <button class="btn-primary"
-                    onclick="updateStatus(${a.id}, 'approved')">
-                Approve
-            </button>
-            <button class="btn-danger"
-                    style="margin-left:6px;"
-                    onclick="updateStatus(${a.id}, 'rejected')">
-                Reject
-            </button>
-        `;
-    }
-
-    function updateStatus(id, newStatus) {
-        const list =
-            JSON.parse(localStorage.getItem("doctor_appointments")) || [];
-
-        const target = list.find(a => a.id === id);
-        if (!target) return;
-
-        target.status = newStatus;
-
-        localStorage.setItem("doctor_appointments", JSON.stringify(list));
-        loadAppointments();
-    }
-
-    /* ================= Filters ================= */
-    function applyAppointmentFilter() {
+    /* =================================================
+     * Filters（完全保持你原逻辑）
+     * ================================================= */
+    function applyDoctorAppointmentFilter() {
         const status = document.getElementById("filterStatus").value;
         const date = document.getElementById("filterDate").value;
 
-        let filtered =
-            allAppointments.filter(a =>
-                a.doctorName === (currentDoctor.name || currentDoctor.username)
-            );
+        const list = getAllAppointments().filter(a =>
+            a.doctorName === (currentDoctor.name || currentDoctor.username)
+        );
+
+        let filtered = list;
 
         if (status !== "ALL") {
             filtered = filtered.filter(a => a.status === status);
@@ -248,24 +146,18 @@
             filtered = filtered.filter(a => a.date === date);
         }
 
-        renderAppointments(filtered);
+        renderAppointmentsTableWithList("appointmentsBody", filtered);
     }
 
-    /* ================= Utils ================= */
-    function statusColor(status) {
-        switch (status) {
-            case "pending": return "orange";
-            case "approved": return "green";
-            case "rejected": return "red";
-            case "cancelled": return "gray";
-            default: return "#333";
-        }
-    }
-
-    /* ================= Logout ================= */
+    /* =================================================
+     * Logout（只清理 doctor 自己）
+     * ================================================= */
     function logout() {
-        localStorage.removeItem("currentUser");
-        location.href = "/auth/login.html";
+        if (confirm("Are you sure you want to logout?")) {
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("current_doctor");
+            location.href = "/auth/login.html";
+        }
     }
 </script>
 

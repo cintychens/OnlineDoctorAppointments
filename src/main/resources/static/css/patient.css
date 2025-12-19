@@ -275,5 +275,19 @@
     background-color: #fff;
     cursor: text;
 }
+/* ===== Fix patient layout (keep side menu visible) ===== */
+.doctor-container {
+    display: flex;
+    align-items: stretch;
+}
+
+.side-menu {
+    width: 220px;
+    flex-shrink: 0;
+}
+
+.main-content {
+    flex: 1;
+}
 
 

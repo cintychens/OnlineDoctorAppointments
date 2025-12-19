@@ -4,14 +4,18 @@
     <meta charset="UTF-8">
     <title>Doctor Profile | MedCare</title>
 
+    <!-- Global styles -->
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/doctor.css">
+
+    <!-- Icons -->
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
 
+<!-- ================= Top Navigation ================= -->
 <nav class="top-nav">
     <div class="nav-brand">
         <i class="fas fa-user-md"></i>
@@ -25,18 +29,19 @@
     </div>
 </nav>
 
+<!-- ================= Layout ================= -->
 <div class="doctor-container">
 
-    <!-- ✅ 统一 Side Menu -->
+    <!-- ===== Side Menu ===== -->
     <aside class="side-menu">
         <ul>
             <li><a href="/doctor/dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
             <li><a href="/doctor/appointments.html"><i class="fas fa-calendar-check"></i> Appointments</a></li>
-            <li><a href="/doctor/schedule.html"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
             <li class="active"><a href="/doctor/profile.html"><i class="fas fa-user"></i> Profile</a></li>
         </ul>
     </aside>
 
+    <!-- ================= Main Content ================= -->
     <main class="main-content">
 
         <!-- ===== Profile ===== -->
@@ -81,8 +86,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Doctor Description</label>
-                    <textarea id="description" class="form-input" rows="4"
+                    <label>Description</label>
+                    <textarea id="description"
+                              class="form-input"
+                              rows="4"
                               placeholder="Brief introduction, experience, expertise..."></textarea>
                 </div>
 
@@ -123,60 +130,94 @@
     </main>
 </div>
 
+<!-- ================= Scripts ================= -->
+<script src="/js/doctor.js"></script>
+
 <script>
+    /* =================================================
+     * Profile Page (UI Only, No Auth / No Redirect)
+     * ================================================= */
     document.addEventListener("DOMContentLoaded", () => {
-        const user = JSON.parse(localStorage.getItem("currentUser"));
-        if (!user || user.role !== "DOCTOR") {
-            location.href = "/auth/login.html";
-            return;
-        }
 
-        document.getElementById("doctorName").innerText = user.name || user.username;
+        // ✅ 只读 doctor 登录态（doctor.js 已保证存在）
+        const doctor = JSON.parse(localStorage.getItem("current_doctor"));
+        if (!doctor) return;
 
-        document.getElementById("username").value = user.username || "";
-        document.getElementById("role").value = user.role || "";
-        document.getElementById("name").value = user.name || "";
-        document.getElementById("email").value = user.email || "";
-        document.getElementById("specialty").value = user.specialty || "";
-        document.getElementById("description").value = user.description || "";
+        document.getElementById("doctorName").innerText =
+            doctor.name || doctor.username || "Doctor";
+
+        document.getElementById("username").value = doctor.username || "";
+        document.getElementById("role").value = doctor.role || "doctor";
+        document.getElementById("name").value = doctor.name || "";
+        document.getElementById("email").value = doctor.email || "";
+        document.getElementById("specialty").value = doctor.specialty || "";
+        document.getElementById("description").value = doctor.description || "";
     });
 
+    /* =================================================
+     * Save Profile (sync doctor + user)
+     * ================================================= */
     function saveProfile() {
-        const user = JSON.parse(localStorage.getItem("currentUser"));
-        user.name = document.getElementById("name").value;
-        user.email = document.getElementById("email").value;
-        user.specialty = document.getElementById("specialty").value;
-        user.description = document.getElementById("description").value;
+        const doctor = JSON.parse(localStorage.getItem("current_doctor"));
+        if (!doctor) return;
 
-        localStorage.setItem("currentUser", JSON.stringify(user));
+        doctor.name = document.getElementById("name").value.trim();
+        doctor.email = document.getElementById("email").value.trim();
+        doctor.specialty = document.getElementById("specialty").value;
+        doctor.description = document.getElementById("description").value.trim();
+
+        // 同步两份，避免其它模块读取不到
+        localStorage.setItem("current_doctor", JSON.stringify(doctor));
+        localStorage.setItem("currentUser", JSON.stringify(doctor));
+
         alert("Profile updated successfully!");
     }
 
+    /* =================================================
+     * Change Password
+     * ================================================= */
     function changePassword() {
-        const user = JSON.parse(localStorage.getItem("currentUser"));
+        const doctor = JSON.parse(localStorage.getItem("current_doctor"));
+        if (!doctor) return;
 
-        if (document.getElementById("oldPassword").value !== user.password) {
+        const oldPwd = document.getElementById("oldPassword").value;
+        const newPwd = document.getElementById("newPassword").value;
+        const confirmPwd = document.getElementById("confirmPassword").value;
+
+        if (oldPwd !== doctor.password) {
             alert("Current password incorrect");
             return;
         }
-        if (document.getElementById("newPassword").value.length < 6) {
+        if (newPwd.length < 6) {
             alert("Password must be at least 6 characters");
             return;
         }
-        if (document.getElementById("newPassword").value !==
-            document.getElementById("confirmPassword").value) {
+        if (newPwd !== confirmPwd) {
             alert("Passwords do not match");
             return;
         }
 
-        user.password = document.getElementById("newPassword").value;
-        localStorage.setItem("currentUser", JSON.stringify(user));
-        alert("Password updated!");
+        doctor.password = newPwd;
+
+        localStorage.setItem("current_doctor", JSON.stringify(doctor));
+        localStorage.setItem("currentUser", JSON.stringify(doctor));
+
+        alert("Password updated successfully!");
+
+        document.getElementById("oldPassword").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
     }
 
+    /* =================================================
+     * Logout
+     * ================================================= */
     function logout() {
-        localStorage.removeItem("currentUser");
-        location.href = "/auth/login.html";
+        if (confirm("Are you sure you want to logout?")) {
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("current_doctor");
+            location.href = "/auth/login.html";
+        }
     }
 </script>
 

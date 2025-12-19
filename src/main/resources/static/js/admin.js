@@ -47,20 +47,21 @@ function initDoctors() {
                 name: "Dr. Smith",
                 specialty: "Cardiology",
                 room: "Room 302",
-                enabled: true
+                enabled: true,
+                status: "approved"
             },
             {
                 id: 2,
                 name: "Dr. Brown",
                 specialty: "Dermatology",
                 room: "Room 210",
-                enabled: true
+                enabled: false,
+                status: "pending"
             }
         ];
         saveDoctors(demoDoctors);
     }
 }
-
 
 /* =================================================
  * 校验：Room 是否已被占用（创建医生用）
@@ -77,39 +78,95 @@ function isRoomOccupied(room) {
  * 创建医生（Room 唯一校验）
  * ================================================= */
 function createDoctor() {
-    const nameInput = document.getElementById("doctorName");
-    const specialtyInput = document.getElementById("doctorSpecialty");
-    const roomInput = document.getElementById("doctorRoom");
+    const name = doctorName.value.trim();
+    const specialty = doctorSpecialty.value;
+    const room = doctorRoom.value.trim();
 
-    const name = nameInput.value.trim();
-    const specialty = specialtyInput.value.trim();
-    const room = roomInput.value.trim();
+    const initDate = document.getElementById("initDate").value;
+    const initStart = document.getElementById("initStart").value;
+    const initEnd = document.getElementById("initEnd").value;
 
     if (!name || !specialty || !room) {
-        alert("Please enter doctor name, specialty and room.");
-        return;
-    }
-
-    if (isRoomOccupied(room)) {
-        alert(`Room "${room}" is already assigned to another doctor.`);
+        alert("Please complete doctor information.");
         return;
     }
 
     const doctors = getDoctors();
+    const schedules = getSchedules();
+
+    // ⭐ 如果填写了初始时间，才做冲突校验
+    if (initDate && initStart && initEnd) {
+        if (initStart >= initEnd) {
+            alert("End time must be later than start time.");
+            return;
+        }
+
+        const conflict = schedules.some(s =>
+            s.room.toLowerCase() === room.toLowerCase() &&
+            s.date === initDate &&
+            isTimeOverlap(initStart, initEnd, s.startTime, s.endTime)
+        );
+
+        if (conflict) {
+            alert(`Room ${room} is already occupied during this time.`);
+            return;
+        }
+    }
+
+    // ✅ 创建医生
+    const doctorId = Date.now();
     doctors.push({
-        id: Date.now(),
+        id: doctorId,
         name,
         specialty,
         room,
+        status: "approved",
         enabled: true
     });
 
+    // ✅ 如果有初始时间 → 自动创建 schedule
+    if (initDate && initStart && initEnd) {
+        schedules.push({
+            id: Date.now() + 1,
+            doctorId,
+            doctorName: name,
+            room,
+            date: initDate,
+            startTime: initStart,
+            endTime: initEnd
+        });
+    }
+
     saveDoctors(doctors);
+    saveSchedules(schedules);
+    renderDoctorTable();
 
-    nameInput.value = "";
-    specialtyInput.value = "";
-    roomInput.value = "";
+    alert("Doctor created successfully.");
+}
 
+function approveDoctor(id) {
+    const doctors = getDoctors();
+    const doctor = doctors.find(d => d.id === id);
+    if (!doctor) return;
+
+    doctor.approved = true;
+    doctor.enabled = true;
+    doctor.status = "approved";
+
+    saveDoctors(doctors);
+    renderDoctorTable();
+}
+
+function rejectDoctor(id) {
+    const doctors = getDoctors();
+    const doctor = doctors.find(d => d.id === id);
+    if (!doctor) return;
+
+    doctor.approved = false;
+    doctor.enabled = false;
+    doctor.status = "rejected";
+
+    saveDoctors(doctors);
     renderDoctorTable();
 }
 
@@ -156,20 +213,30 @@ function isTimeOverlap(start1, end1, start2, end2) {
 /* =================================================
  * Room + Time Slot 冲突检测
  * ================================================= */
-function hasRoomTimeConflict(room, date, start, end) {
-    if (!room) return false;
+function hasRoomConflict(room, date, startTime, endTime, ignoreScheduleId = null) {
     const schedules = getSchedules();
+    const doctors = getDoctors();
 
-    const roomLower = String(room).toLowerCase();
+    for (const s of schedules) {
 
-    return schedules.some(s => {
-        // ⭐ 防御：旧数据/脏数据可能没有 room
-        if (!s || !s.room) return false;
+        // 编辑时，跳过自己
+        if (ignoreScheduleId && s.id === ignoreScheduleId) continue;
 
-        return String(s.room).toLowerCase() === roomLower
-            && s.date === date
-            && isTimeOverlap(start, end, s.startTime, s.endTime);
-    });
+        if (s.date !== date) continue;
+
+        const doctor = doctors.find(d => d.id === s.doctorId);
+        if (!doctor) continue;
+
+        // 同一个诊室
+        if (doctor.room !== room) continue;
+
+        // 时间是否重叠
+        if (isTimeOverlap(startTime, endTime, s.startTime, s.endTime)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function addScheduleInline(doctorId) {
@@ -228,11 +295,11 @@ function saveScheduleEdit() {
         const end = document.getElementById("editEnd").value;
 
         console.log("SAVE CLICKED:", {
-            mode: editingScheduleId ? "EDIT" : "ADD",
+            mode: editingScheduleId !== null ? "EDIT" : "ADD",
             date, start, end
         });
 
-        // ===== 1️⃣ 基本校验 =====
+        /* ========= 1️⃣ 基础校验 ========= */
         if (!date || !start || !end) {
             alert("Please select date and time.");
             return;
@@ -244,43 +311,54 @@ function saveScheduleEdit() {
         }
 
         const schedules = getSchedules();
+        const doctors = getDoctors();
 
-        /* ================= 编辑已有 Schedule ================= */
+        let doctor = null;
+        let currentRoom = null;
+
+        /* ========= 2️⃣ 区分编辑 / 新建 ========= */
+
         if (editingScheduleId !== null) {
+            // ===== 编辑已有 schedule =====
             const s = schedules.find(x => x.id === editingScheduleId);
-
             if (!s) {
                 alert("Editing schedule not found. Please reopen editor.");
                 editingScheduleId = null;
                 return;
             }
 
-            const roomLower = s.room ? s.room.toLowerCase() : null;
+            doctor = doctors.find(d => d.id === s.doctorId);
+            if (!doctor || !doctor.room) {
+                alert("Doctor or room information missing.");
+                return;
+            }
 
-            // ⭐ 防御式冲突检测
+            currentRoom = doctor.room;
+
+            // ⭐ 诊室冲突检测（忽略自己）
             const conflict = schedules.some(other => {
                 if (!other || other.id === s.id) return false;
-                if (!other.room || !roomLower) return false;
+                if (!other.room) return false;
 
                 return (
-                    other.room.toLowerCase() === roomLower &&
+                    other.room.toLowerCase() === currentRoom.toLowerCase() &&
                     other.date === date &&
                     isTimeOverlap(start, end, other.startTime, other.endTime)
                 );
             });
 
             if (conflict) {
-                alert("Room conflict detected.");
+                alert(`Room ${currentRoom} is already occupied during this time.`);
                 return;
             }
 
+            // ✅ 更新 schedule
             s.date = date;
             s.startTime = start;
             s.endTime = end;
         }
-
-        /* ================= 新建 Schedule ================= */
         else {
+            // ===== 新建 schedule =====
             const editor = document.getElementById("scheduleEditor");
             const doctorId = Number(editor.dataset.doctorId);
 
@@ -289,46 +367,43 @@ function saveScheduleEdit() {
                 return;
             }
 
-            const doctor = getDoctors().find(d => d.id === doctorId);
-            if (!doctor) {
-                alert("Doctor not found.");
+            doctor = doctors.find(d => d.id === doctorId);
+            if (!doctor || !doctor.room) {
+                alert("Doctor or room information missing.");
                 return;
             }
 
-            if (!doctor.room) {
-                alert("Doctor room is missing. Please edit doctor info first.");
-                return;
-            }
+            currentRoom = doctor.room;
 
-            // ⭐ 使用防御版 room 冲突检测
-            const roomLower = doctor.room.toLowerCase();
+            // ⭐ 诊室冲突检测
             const conflict = schedules.some(s => {
                 if (!s || !s.room) return false;
 
                 return (
-                    s.room.toLowerCase() === roomLower &&
+                    s.room.toLowerCase() === currentRoom.toLowerCase() &&
                     s.date === date &&
                     isTimeOverlap(start, end, s.startTime, s.endTime)
                 );
             });
 
             if (conflict) {
-                alert("Room conflict detected.");
+                alert(`Room ${currentRoom} is already occupied during this time.`);
                 return;
             }
 
+            // ✅ 新增 schedule
             schedules.push({
                 id: Date.now(),
-                doctorId,
+                doctorId: doctor.id,
                 doctorName: doctor.name,
-                room: doctor.room,
+                room: currentRoom,
                 date,
                 startTime: start,
                 endTime: end
             });
         }
 
-        // ===== 4️⃣ 保存 & 刷新 UI =====
+        /* ========= 3️⃣ 保存 & 刷新 ========= */
         saveSchedules(schedules);
         renderDoctorTable();
 
@@ -336,6 +411,7 @@ function saveScheduleEdit() {
         closeEditor();
 
         alert("Schedule saved successfully!");
+
     } catch (e) {
         console.error("Save schedule failed:", e);
         alert("Save failed due to system error:\n" + e.message);
@@ -346,53 +422,74 @@ function closeEditor() {
     document.getElementById("scheduleEditor").style.display = "none";
 }
 
-/* =================================================
- * 渲染医生表格
- * ================================================= */
-function renderDoctorTable() {
-    const tbody = document.getElementById("doctorTableBody");
-    tbody.innerHTML = "";
+ function renderDoctorTable() {
+     const tbody = document.getElementById("doctorTableBody");
+     if (!tbody) return;
 
-    const doctors = getDoctors();
+     tbody.innerHTML = "";
 
-    doctors.forEach(doctor => {
+     const doctors = getDoctors();
+     const schedulesAll = getSchedules();
 
-        // ⭐ 1. 只取这个医生的排班
-        const schedules = getSchedules().filter(
-            s => s.doctorId === doctor.id
-        );
+     doctors.forEach(doctor => {
 
-        // ⭐ 2. 渲染排班小列表
-        const scheduleHtml = schedules.length === 0
-            ? `<em>No schedule</em>`
-            : schedules.map(s => `
-                <div style="margin-bottom:4px">
-                    ${s.date} ${s.startTime}-${s.endTime}
-                    <button onclick="showEditScheduleForm(${s.id})">Edit</button>
-                    <button onclick="deleteSchedule(${s.id})">×</button>
-                </div>
-            `).join("");
+         const status = doctor.status || "pending"; // ⭐ 统一入口
 
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${doctor.id}</td>
-            <td>${doctor.name}</td>
-            <td>${doctor.specialty}</td>
-            <td>${doctor.room}</td>
-            <td>${scheduleHtml}</td>
-            <td>
-                <button onclick="toggleDoctor(${doctor.id})">
-                    ${doctor.enabled ? "Disable" : "Enable"}
-                </button>
-                <button onclick="addScheduleInline(${doctor.id})">
-                    + Add Schedule
-                </button>
-                <button onclick="deleteDoctor(${doctor.id})">Delete</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
+         const schedules = schedulesAll.filter(
+             s => s.doctorId === doctor.id
+         );
+
+         const scheduleHtml =
+             status !== "approved"
+                 ? `<em>Not approved</em>`
+                 : (schedules.length === 0
+                     ? `<em>No schedule</em>`
+                     : schedules.map(s => `
+                         <div style="margin-bottom:4px">
+                             ${s.date} ${s.startTime}-${s.endTime}
+                             <button onclick="showEditScheduleForm(${s.id})">Edit</button>
+                             <button onclick="deleteSchedule(${s.id})">×</button>
+                         </div>
+                     `).join("")
+                 );
+
+         let actionHtml = "";
+
+         if (status === "pending") {
+             actionHtml = `
+                 <button onclick="approveDoctor(${doctor.id})">Approve</button>
+                 <button onclick="rejectDoctor(${doctor.id})">Reject</button>
+             `;
+         } else if (status === "approved") {
+             actionHtml = `
+                 <button onclick="toggleDoctor(${doctor.id})">
+                     ${doctor.enabled ? "Disable" : "Enable"}
+                 </button>
+                 <button onclick="addScheduleInline(${doctor.id})">
+                     + Add Schedule
+                 </button>
+                 <button onclick="deleteDoctor(${doctor.id})">
+                     Delete
+                 </button>
+             `;
+         } else {
+             actionHtml = `<em>Rejected</em>`;
+         }
+
+         const tr = document.createElement("tr");
+         tr.innerHTML = `
+             <td>${doctor.id}</td>
+             <td>${doctor.name}</td>
+             <td>${doctor.specialty}</td>
+             <td>${doctor.room}</td>
+             <td>${scheduleHtml}</td>
+             <td>${actionHtml}</td>
+         `;
+
+         tbody.appendChild(tr);
+     });
+ }
+
 
 /* =================================================
  * 页面加载初始化

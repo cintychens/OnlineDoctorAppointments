@@ -34,7 +34,7 @@
     <!-- ================= Side Menu ================= -->
     <aside class="side-menu">
         <ul>
-            <li class="active">
+            <li>
                 <a href="/patient/index.html">
                     <i class="fas fa-home"></i> Dashboard
                 </a>
@@ -46,21 +46,19 @@
                 </a>
             </li>
 
-            <li>
+            <li class="active">
                 <a href="/patient/appointments.html">
                     <i class="fas fa-calendar-check"></i> My Appointments
                 </a>
             </li>
 
-            <!-- ✅ 新增 Profile -->
             <li>
                 <a href="/patient/profile.html">
-                    <i class="fas fa-id-card"></i> Profile
+                    <i class="fas fa-user"></i> Profile
                 </a>
             </li>
         </ul>
     </aside>
-
 
     <!-- ================= Main ================= -->
     <main class="main-content">
@@ -130,7 +128,7 @@
                     </h3>
 
                     <p><strong>Date:</strong> ${a.date}</p>
-                    <p><strong>Time:</strong> ${a.time}</p>
+                    <p><strong>Time:</strong> ${a.startTime} - ${a.endTime}</p>
 
                     <p>
                         <strong>Status:</strong>

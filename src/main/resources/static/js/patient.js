@@ -24,28 +24,45 @@ let doctors = [];
  * Auth - 兼容版（不再因为 role 大小写/缺失踢出）
  * ================================================= */
 function getLoggedInPatient() {
-    // 先取 currentUser
     let u = null;
-    try {
-        u = JSON.parse(localStorage.getItem(USER_KEY));
-    } catch (e) {}
 
-    // 再兜底 current_patient
+    // ✅ ① 先取 patient 专属登录态（最稳定，不会被 doctor/admin 覆盖）
+    try {
+        u = JSON.parse(localStorage.getItem(PATIENT_KEY));
+    } catch (e) {
+        u = null;
+    }
+
+    // ✅ ② 再兜底 currentUser（兼容旧数据）
     if (!u) {
         try {
-            u = JSON.parse(localStorage.getItem(PATIENT_KEY));
-        } catch (e) {}
+            u = JSON.parse(localStorage.getItem(USER_KEY));
+        } catch (e) {
+            u = null;
+        }
     }
 
-    // 完全没有登录态
     if (!u) return null;
 
-    // role 容错（有些系统 role 可能是 Patient / PATIENT / user / 空）
-    const role = (u.role || "").toString().toLowerCase();
-    if (role && role !== "patient") {
-        // 如果明确不是 patient，就踢回去
+    // ✅ role 容错：只有“明确是 doctor/admin”才踢出
+    //    - patient / PATIENT / Patient -> 放行
+    //    - role 缺失/空/写成 user -> 也放行（避免误踢导致页面切换掉线）
+    const role = (u.role || "").toString().trim().toLowerCase();
+
+    if (role === "doctor" || role === "admin") {
         return null;
     }
+
+    // 如果 role 明确且不是 patient/user（比如别的奇怪值），也不放行
+    // 但对你项目来说：user/空值也当 patient 放行，避免“很容易退出”
+    if (role && role !== "patient" && role !== "user") {
+        return null;
+    }
+
+    // ✅ 一旦识别出 patient，把它同步存入 PATIENT_KEY，后续切页面就稳了
+    try {
+        localStorage.setItem(PATIENT_KEY, JSON.stringify(u));
+    } catch (e) {}
 
     return u;
 }
@@ -253,7 +270,7 @@ function closeModal() {
  * Book Appointment (写入 doctor_appointments)
  * ================================================= */
 function bookAppointment(doctor, schedule) {
-    const list = JSON.parse(localStorage.getItem(APPOINTMENT_KEY)) || [];
+    const list = JSON.parse(localStorage.getItem("doctor_appointments")) || [];
 
     list.push({
         id: Date.now(),
@@ -261,12 +278,15 @@ function bookAppointment(doctor, schedule) {
         patientName: patient.name || patient.username,
         doctorId: doctor.id,
         doctorName: doctor.name,
+
         date: schedule.date,
-        time: `${schedule.startTime}-${schedule.endTime}`,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+
         status: "pending"
     });
 
-    localStorage.setItem(APPOINTMENT_KEY, JSON.stringify(list));
+    localStorage.setItem("doctor_appointments", JSON.stringify(list));
 
     alert("Appointment request submitted.");
     closeModal();
@@ -277,7 +297,11 @@ function bookAppointment(doctor, schedule) {
  * ================================================= */
 function getMyAppointments(p) {
     const list = JSON.parse(localStorage.getItem(APPOINTMENT_KEY)) || [];
-    return list.filter(a => a.patientId === p.id);
+
+    return list.filter(a =>
+        // 用 patientName 作为主匹配（你系统里最稳定）
+        a.patientName === (p.name || p.username)
+    );
 }
 
 function cancelAppointmentByPatient(id, p) {

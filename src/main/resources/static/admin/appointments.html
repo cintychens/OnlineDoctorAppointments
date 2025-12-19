@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Appointments | MedCare</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/doctor.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+<!-- ================= Top Navigation ================= -->
+<nav class="top-nav">
+    <div class="nav-brand">
+        <i class="fas fa-user-shield"></i>
+        <span>Admin Dashboard</span>
+    </div>
+
+    <div class="nav-user">
+        <span id="adminName">Admin</span>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+</nav>
+
+<div class="doctor-container">
+
+    <!-- ================= Side Menu ================= -->
+    <aside class="side-menu">
+        <ul>
+            <li>
+                <a href="/admin/dashboard.html">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="/admin/manage-doctors.html">
+                    <i class="fas fa-user-md"></i> Manage Doctors
+                </a>
+            </li>
+
+            <li class="active">
+                <a href="/admin/appointments.html">
+                    <i class="fas fa-calendar-check"></i> Appointments
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- ================= Main Content ================= -->
+    <main class="main-content">
+
+        <!-- ===== Title ===== -->
+        <div class="card">
+            <div class="card-body">
+                <h2>
+                    <i class="fas fa-calendar-check"></i>
+                    Appointment Management
+                </h2>
+                <p>View all appointments in the system</p>
+            </div>
+        </div>
+
+        <!-- ===== Appointment Table ===== -->
+        <div class="card">
+            <div class="card-body">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody id="appointmentTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ================= Scripts ================= -->
+<script>
+    const APPOINTMENT_KEY = "doctor_appointments";
+
+    function checkAdminAuth() {
+        const user = JSON.parse(localStorage.getItem("currentUser"));
+        if (!user || String(user.role).toLowerCase() !== "admin") {
+            location.href = "/auth/login.html";
+            return null;
+        }
+        return user;
+    }
+
+    function logout() {
+        localStorage.removeItem("currentUser");
+        location.href = "/auth/login.html";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const admin = checkAdminAuth();
+        if (!admin) return;
+
+        document.getElementById("adminName").innerText =
+            admin.username || "Admin";
+
+        renderAppointments();
+    });
+
+    function renderAppointments() {
+        const list =
+            JSON.parse(localStorage.getItem(APPOINTMENT_KEY)) || [];
+
+        const tbody = document.getElementById("appointmentTable");
+        tbody.innerHTML = "";
+
+        if (list.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center;color:#888;">
+                        No appointments found
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        list.forEach(a => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${a.id}</td>
+                <td>${a.patientName}</td>
+                <td>${a.doctorName}</td>
+                <td>${a.date}</td>
+                <td>${a.time}</td>
+                <td>${a.status}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+</script>
+
+</body>
+</html>

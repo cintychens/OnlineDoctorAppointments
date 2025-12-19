@@ -5,6 +5,7 @@
     <title>Admin Dashboard | MedCare</title>
 
     <link rel="stylesheet" href="/css/style.css">
+    <!-- 说明：暂复用 doctor.css，仅用于布局（非 Schedule 语义） -->
     <link rel="stylesheet" href="/css/doctor.css">
 
     <link rel="stylesheet"
@@ -44,13 +45,19 @@
                     <i class="fas fa-user-md"></i> Manage Doctors
                 </a>
             </li>
+
+            <li>
+                <a href="/admin/appointments.html">
+                    <i class="fas fa-calendar-check"></i> Appointments
+                </a>
+            </li>
         </ul>
     </aside>
 
-    <!-- ================= Main ================= -->
+    <!-- ================= Main Content ================= -->
     <main class="main-content">
 
-        <!-- ===== Title ===== -->
+        <!-- ===== System Overview ===== -->
         <div class="card">
             <div class="card-body">
                 <h2>
@@ -61,7 +68,7 @@
             </div>
         </div>
 
-        <!-- ===== Stats ===== -->
+        <!-- ===== Statistics ===== -->
         <div class="doctor-grid">
 
             <div class="card">
@@ -74,12 +81,59 @@
 
             <div class="card">
                 <div class="card-body" style="text-align:center;">
+                    <i class="fas fa-user-check" style="font-size:28px;"></i>
+                    <h3>Active Doctors</h3>
+                    <div class="stat-number" id="activeDoctorCount">0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body" style="text-align:center;">
+                    <i class="fas fa-user-slash" style="font-size:28px;"></i>
+                    <h3>Disabled Doctors</h3>
+                    <div class="stat-number" id="disabledDoctorCount">0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body" style="text-align:center;">
                     <i class="fas fa-calendar-check" style="font-size:28px;"></i>
                     <h3>Total Appointments</h3>
                     <div class="stat-number" id="appointmentCount">0</div>
                 </div>
             </div>
 
+            <div class="card">
+                <div class="card-body" style="text-align:center;">
+                    <i class="fas fa-clock" style="font-size:28px;"></i>
+                    <h3>Pending Appointments</h3>
+                    <div class="stat-number" id="pendingAppointmentCount">0</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== Recent Appointments ===== -->
+        <div class="card">
+            <div class="card-body">
+                <h3>
+                    <i class="fas fa-list"></i>
+                    Recent Appointments
+                </h3>
+
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody id="recentAppointments"></tbody>
+                </table>
+            </div>
         </div>
 
     </main>
@@ -91,6 +145,7 @@
     const APPOINTMENT_KEY = "doctor_appointments";
 
     document.addEventListener("DOMContentLoaded", () => {
+
         const doctors =
             JSON.parse(localStorage.getItem(DOCTOR_KEY)) || [];
         const appointments =
@@ -98,9 +153,49 @@
 
         document.getElementById("doctorCount").innerText =
             doctors.length;
+
         document.getElementById("appointmentCount").innerText =
             appointments.length;
+
+        document.getElementById("activeDoctorCount").innerText =
+            doctors.filter(d => d.enabled !== false).length;
+
+        document.getElementById("disabledDoctorCount").innerText =
+            doctors.filter(d => d.enabled === false).length;
+
+        document.getElementById("pendingAppointmentCount").innerText =
+            appointments.filter(a => a.status === "pending").length;
+
+        renderRecentAppointments(appointments);
     });
+
+    function renderRecentAppointments(list) {
+        const tbody = document.getElementById("recentAppointments");
+        tbody.innerHTML = "";
+
+        if (list.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align:center;color:#888;">
+                        No appointments found
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        list.slice(-5).reverse().forEach(a => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${a.patientName || "-"}</td>
+                <td>${a.doctorName || "-"}</td>
+                <td>${a.date || "-"}</td>
+                <td>${a.startTime || "-"} - ${a.endTime || "-"}</td>
+                <td>${a.status || "-"}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
 
     function logout() {
         localStorage.removeItem("currentUser");
