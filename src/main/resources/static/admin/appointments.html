@@ -119,36 +119,39 @@
     });
 
     function renderAppointments() {
-        const list =
-            JSON.parse(localStorage.getItem(APPOINTMENT_KEY)) || [];
+    const list =
+        (JSON.parse(localStorage.getItem(APPOINTMENT_KEY)) || [])
+            .slice()
+            .sort((a, b) => b.id - a.id); // 最新预约在最上面
 
-        const tbody = document.getElementById("appointmentTable");
-        tbody.innerHTML = "";
+    const tbody = document.getElementById("appointmentTable");
+    tbody.innerHTML = "";
 
-        if (list.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" style="text-align:center;color:#888;">
-                        No appointments found
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        list.forEach(a => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td>${a.id}</td>
-                <td>${a.patientName}</td>
-                <td>${a.doctorName}</td>
-                <td>${a.date}</td>
-                <td>${a.time}</td>
-                <td>${a.status}</td>
-            `;
-            tbody.appendChild(tr);
-        });
+    if (list.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align:center;color:#888;">
+                    No appointments found
+                </td>
+            </tr>
+        `;
+        return;
     }
+
+    list.forEach(a => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${a.id}</td>
+            <td>${a.patientName}</td>
+            <td>${a.doctorName}</td>
+            <td>${a.date}</td>
+            <td>${a.time}</td>
+            <td>${a.status}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
 </script>
 
 </body>

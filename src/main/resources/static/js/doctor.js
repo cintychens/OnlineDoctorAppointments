@@ -13,15 +13,16 @@
 const STORAGE_KEY = "doctor_appointments";
 const DOCTOR_KEY = "current_doctor";
 
+/* =================================================
+ * 登录态
+ * ================================================= */
 function getCurrentDoctor() {
     let u = null;
 
-    // ✅ 使用已定义的 DOCTOR_KEY
     try {
         u = JSON.parse(localStorage.getItem(DOCTOR_KEY));
     } catch (e) {}
 
-    // ② 兜底 currentUser（第一次登录）
     if (!u) {
         try {
             u = JSON.parse(localStorage.getItem("currentUser"));
@@ -33,9 +34,7 @@ function getCurrentDoctor() {
     const role = (u.role || "").toLowerCase();
     if (role !== "doctor") return null;
 
-    // 🔒 固化 doctor 登录态
     localStorage.setItem(DOCTOR_KEY, JSON.stringify(u));
-
     return u;
 }
 
@@ -48,6 +47,33 @@ function getAllAppointments() {
 
 function saveAppointments(list) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+/* =================================================
+ * ⭐ 统一排序函数（核心）
+ * 最新日期 + 时间 + id 在最上
+ * ================================================= */
+function sortByDateTimeDesc(list) {
+    return list.slice().sort((a, b) => {
+
+        const getTimeValue = (x) => {
+            // 新结构
+            if (x.startTime) {
+                return new Date(`${x.date} ${x.startTime}`).getTime();
+            }
+            // 老结构
+            if (x.time) {
+                return new Date(`${x.date} ${x.time.split(" - ")[0]}`).getTime();
+            }
+            return 0;
+        };
+
+        const t1 = getTimeValue(a);
+        const t2 = getTimeValue(b);
+
+        if (t1 !== t2) return t2 - t1;
+        return (b.id || 0) - (a.id || 0);
+    });
 }
 
 /* =================================================
@@ -95,14 +121,16 @@ function renderTodayAppointments() {
     if (!tbody) return;
 
     const today = new Date().toISOString().split("T")[0];
-    const list = getAllAppointments().filter(a => a.date === today);
+    const list = sortByDateTimeDesc(
+        getAllAppointments().filter(a => a.date === today)
+    );
 
     tbody.innerHTML = "";
 
     if (list.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="5" style="text-align:center;color:#999;">
+                <td colspan="4" style="text-align:center;color:#999;">
                     No appointments today
                 </td>
             </tr>
@@ -113,7 +141,14 @@ function renderTodayAppointments() {
     list.forEach(a => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${a.startTime} - ${a.endTime}</td>
+            <td>
+                ${
+                    a.startTime
+                        ? `${a.startTime} - ${a.endTime}`
+                        : (a.time || "-")
+                }
+            </td>
+
             <td>${a.patientName}</td>
             <td>${a.doctorName || "-"}</td>
             <td>
@@ -127,13 +162,13 @@ function renderTodayAppointments() {
 }
 
 /*************************************************
- * Appointments 页面渲染
+ * Appointments 页面
  *************************************************/
 function renderAppointmentsTable(tbodyId) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
 
-    const list = getAllAppointments();
+    const list = sortByDateTimeDesc(getAllAppointments());
     tbody.innerHTML = "";
 
     if (list.length === 0) {
@@ -167,6 +202,46 @@ function renderAppointmentsTable(tbodyId) {
     });
 }
 
+function renderAppointmentsTableWithList(tbodyId, list) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+
+    const sorted = sortByDateTimeDesc(list);
+    tbody.innerHTML = "";
+
+    if (sorted.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align:center;color:#999;">
+                    No appointments found.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    sorted.forEach(a => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${a.patientName}</td>
+            <td>${a.date}</td>
+            <td>${a.startTime} - ${a.endTime}</td>
+            <td>
+                <span class="badge ${a.status}">
+                    ${capitalize(a.status)}
+                </span>
+            </td>
+            <td>
+                ${renderActionButtons(a)}
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+/*************************************************
+ * 操作按钮
+ *************************************************/
 function renderActionButtons(a) {
     if (a.status === "pending") {
         return `
@@ -188,9 +263,6 @@ function renderActionButtons(a) {
     return `<em>-</em>`;
 }
 
-/*************************************************
- * 操作入口
- *************************************************/
 function acceptAppointment(id) {
     updateAppointmentStatus(id, "confirmed");
     notifyDoctorPages();
@@ -204,58 +276,6 @@ function rejectAppointment(id) {
 function completeAppointment(id) {
     updateAppointmentStatus(id, "completed");
     notifyDoctorPages();
-}
-
-/*************************************************
- * 预约详情（简化版）
- *************************************************/
-function viewDetail(id) {
-    const a = getAllAppointments().find(x => x.id === id);
-    if (!a) return;
-
-    alert(
-        `Patient: ${a.patientName}\n` +
-        `Doctor: ${a.doctorName}\n` +
-        `Date: ${a.date}\n` +
-        `Time: ${a.startTime} - ${a.endTime}\n` +
-        `Status: ${a.status}`
-    );
-}
-
-function renderAppointmentsTableWithList(tbodyId, list) {
-    const tbody = document.getElementById(tbodyId);
-    if (!tbody) return;
-
-    tbody.innerHTML = "";
-
-    if (list.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" style="text-align:center;color:#999;">
-                    No appointments found.
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    list.forEach(a => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${a.patientName}</td>
-            <td>${a.date}</td>
-            <td>${a.startTime} - ${a.endTime}</td>
-            <td>
-                <span class="badge ${a.status}">
-                    ${capitalize(a.status)}
-                </span>
-            </td>
-            <td>
-                ${renderActionButtons(a)}
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
 }
 
 /*************************************************
@@ -274,7 +294,6 @@ document.addEventListener("DOMContentLoaded", () => {
         location.href = "/auth/login.html";
         return;
     }
-
     notifyDoctorPages();
 });
 
@@ -282,7 +301,6 @@ function notifyDoctorPages() {
     if (document.getElementById("appointmentsBody")) {
         renderAppointmentsTable("appointmentsBody");
     }
-
     if (typeof renderDoctorDashboard === "function") {
         renderDoctorDashboard();
     }
