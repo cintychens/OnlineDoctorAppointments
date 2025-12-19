@@ -76,13 +76,14 @@
         <!-- ===== Filters ===== -->
         <div class="card">
             <div class="card-body form-row">
+
                 <div class="form-group">
                     <label>Status</label>
                     <select class="form-input" id="filterStatus">
                         <option value="ALL">All</option>
                         <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="completed">Completed</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
                         <option value="cancelled">Cancelled</option>
                     </select>
                 </div>
@@ -97,6 +98,7 @@
                         <i class="fas fa-filter"></i> Apply
                     </button>
                 </div>
+
             </div>
         </div>
 
@@ -110,14 +112,13 @@
                         <th>Patient</th>
                         <th>Date</th>
                         <th>Time</th>
-                        <th>Reason</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
 
                     <tbody id="appointmentsBody">
-                    <!-- rendered by doctor.js -->
+                    <!-- rendered by JS -->
                     </tbody>
                 </table>
 
@@ -128,8 +129,11 @@
 </div>
 
 <!-- ================= Scripts ================= -->
-<script src="/js/doctor.js"></script>
 <script>
+    /* ================= Init ================= */
+    let currentDoctor = null;
+    let allAppointments = [];
+
     document.addEventListener("DOMContentLoaded", () => {
         const user = JSON.parse(localStorage.getItem("currentUser"));
         if (!user || user.role !== "DOCTOR") {
@@ -137,14 +141,133 @@
             return;
         }
 
+        currentDoctor = user;
         document.getElementById("doctorName").innerText =
             user.name || user.username || "Doctor";
 
-        // ✅ 正确的渲染函数
-        renderAppointmentsTable("appointmentsBody");
+        loadAppointments();
     });
-</script>
 
+    /* ================= Load ================= */
+    function loadAppointments() {
+        allAppointments =
+            JSON.parse(localStorage.getItem("doctor_appointments")) || [];
+
+        // 只显示当前医生的预约
+        const myList = allAppointments.filter(a =>
+            a.doctorName === (currentDoctor.name || currentDoctor.username)
+        );
+
+        renderAppointments(myList);
+    }
+
+    /* ================= Render ================= */
+    function renderAppointments(list) {
+        const tbody = document.getElementById("appointmentsBody");
+        tbody.innerHTML = "";
+
+        if (list.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align:center;color:#888;">
+                        No appointments found.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        list.forEach(a => {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${a.patientName}</td>
+                <td>${a.date}</td>
+                <td>${a.time}</td>
+                <td>
+                    <span style="color:${statusColor(a.status)};font-weight:600;">
+                        ${a.status}
+                    </span>
+                </td>
+                <td>
+                    ${renderActions(a)}
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    /* ================= Actions ================= */
+    function renderActions(a) {
+        if (a.status !== "pending") {
+            return `<span style="color:#888;">—</span>`;
+        }
+
+        return `
+            <button class="btn-primary"
+                    onclick="updateStatus(${a.id}, 'approved')">
+                Approve
+            </button>
+            <button class="btn-danger"
+                    style="margin-left:6px;"
+                    onclick="updateStatus(${a.id}, 'rejected')">
+                Reject
+            </button>
+        `;
+    }
+
+    function updateStatus(id, newStatus) {
+        const list =
+            JSON.parse(localStorage.getItem("doctor_appointments")) || [];
+
+        const target = list.find(a => a.id === id);
+        if (!target) return;
+
+        target.status = newStatus;
+
+        localStorage.setItem("doctor_appointments", JSON.stringify(list));
+        loadAppointments();
+    }
+
+    /* ================= Filters ================= */
+    function applyAppointmentFilter() {
+        const status = document.getElementById("filterStatus").value;
+        const date = document.getElementById("filterDate").value;
+
+        let filtered =
+            allAppointments.filter(a =>
+                a.doctorName === (currentDoctor.name || currentDoctor.username)
+            );
+
+        if (status !== "ALL") {
+            filtered = filtered.filter(a => a.status === status);
+        }
+
+        if (date) {
+            filtered = filtered.filter(a => a.date === date);
+        }
+
+        renderAppointments(filtered);
+    }
+
+    /* ================= Utils ================= */
+    function statusColor(status) {
+        switch (status) {
+            case "pending": return "orange";
+            case "approved": return "green";
+            case "rejected": return "red";
+            case "cancelled": return "gray";
+            default: return "#333";
+        }
+    }
+
+    /* ================= Logout ================= */
+    function logout() {
+        localStorage.removeItem("currentUser");
+        location.href = "/auth/login.html";
+    }
+</script>
 
 </body>
 </html>

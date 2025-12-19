@@ -2,49 +2,179 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Appointments</title>
+    <title>My Appointments | Patient Dashboard</title>
+
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/doctor.css">
+    <link rel="stylesheet" href="/css/patient.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
 
-<div class="container">
-    <h2 class="page-title">My Appointments</h2>
-
-    <div class="nav">
-        <a href="/patient/index.html">Home</a>
-        <a href="/patient/dashboard.html">Book Appointment</a>
-        <a href="/auth/login.html">Logout</a>
+<!-- ================= Top Nav ================= -->
+<nav class="top-nav">
+    <div class="nav-brand">
+        <i class="fas fa-user-injured"></i>
+        <span>Patient Dashboard</span>
     </div>
 
-    <div class="card">
-        <table class="table">
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Doctor</th>
-                <th>Time</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-            </thead>
-            <tbody id="apptTable"></tbody>
-        </table>
+    <div class="nav-user">
+        <span id="patientName">Patient</span>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
     </div>
+</nav>
+
+<div class="doctor-container">
+
+    <!-- ================= Side Menu ================= -->
+    <aside class="side-menu">
+        <ul>
+            <li class="active">
+                <a href="/patient/index.html">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="/patient/doctors.html">
+                    <i class="fas fa-user-md"></i> Doctors
+                </a>
+            </li>
+
+            <li>
+                <a href="/patient/appointments.html">
+                    <i class="fas fa-calendar-check"></i> My Appointments
+                </a>
+            </li>
+
+            <!-- ✅ 新增 Profile -->
+            <li>
+                <a href="/patient/profile.html">
+                    <i class="fas fa-id-card"></i> Profile
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+
+    <!-- ================= Main ================= -->
+    <main class="main-content">
+
+        <!-- Title -->
+        <div class="card">
+            <div class="card-body">
+                <h2>
+                    <i class="fas fa-calendar-check"></i>
+                    My Appointments
+                </h2>
+                <p>View appointment status updated by doctors</p>
+            </div>
+        </div>
+
+        <!-- Appointment List -->
+        <div class="doctor-grid" id="appointmentList"></div>
+
+    </main>
 </div>
 
+<!-- ================= Scripts ================= -->
+<script src="/js/patient.js"></script>
 <script>
-    const user = JSON.parse(localStorage.getItem("currentUser"));
-    if (!user || user.role !== "PATIENT") {
-        alert("Unauthorized");
-        window.location.href = "/auth/login.html";
-    }
+    /* ================= Page Logic ================= */
+    let patient = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        patient = checkPatientAuth();
+        if (!patient) return;
+
+        document.getElementById("patientName").innerText =
+            patient.name || patient.username || "Patient";
+
+        loadAppointments();
+    });
 
     function loadAppointments() {
-        fetch(`/api/appointments/patient/${user.id}`)
-            .then(res => res.json())
-            .then(list => {
-                const tbody = document.getElementById("apptTable");
-                tbody.innerHTML = "";
-                list.forEach(a => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
+        const list = getMyAppointments(patient);
+        renderAppointments(list);
+    }
+
+    function renderAppointments(list) {
+        const container = document.getElementById("appointmentList");
+        container.innerHTML = "";
+
+        if (list.length === 0) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-body empty-text">
+                        No appointments found.
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        list.forEach(a => {
+            const div = document.createElement("div");
+            div.className = "card";
+
+            div.innerHTML = `
+                <div class="card-body">
+                    <h3>
+                        <i class="fas fa-user-md"></i>
+                        ${a.doctorName}
+                    </h3>
+
+                    <p><strong>Date:</strong> ${a.date}</p>
+                    <p><strong>Time:</strong> ${a.time}</p>
+
+                    <p>
+                        <strong>Status:</strong>
+                        <span style="color:${statusColor(a.status)};font-weight:600;">
+                            ${a.status}
+                        </span>
+                    </p>
+
+                    ${renderPatientActions(a)}
+                </div>
+            `;
+
+            container.appendChild(div);
+        });
+    }
+
+    function renderPatientActions(a) {
+        if (a.status !== "pending") {
+            return `
+                <p style="color:#888;font-size:13px;">
+                    This appointment has been processed by the doctor.
+                </p>
+            `;
+        }
+
+        return `
+            <button class="btn-danger"
+                    onclick="onCancel(${a.id})">
+                <i class="fas fa-times"></i> Cancel Appointment
+            </button>
+        `;
+    }
+
+    function onCancel(id) {
+        if (!confirm("Are you sure you want to cancel this appointment?")) return;
+
+        const ok = cancelAppointmentByPatient(id, patient);
+        if (!ok) {
+            alert("This appointment can no longer be cancelled.");
+        }
+
+        loadAppointments();
+    }
+</script>
+
+</body>
+</html>

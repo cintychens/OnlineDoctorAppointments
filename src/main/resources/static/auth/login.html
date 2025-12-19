@@ -158,14 +158,17 @@
 
             // 延迟跳转
             setTimeout(() => {
-                if (user.role === "ADMIN") {
-                    window.location.href = "/admin/dashboard.html";
-                } else if (user.role === "DOCTOR") {
-                    window.location.href = "/doctor/dashboard.html";
-                } else {
-                    window.location.href = "/patient/index.html";
-                }
-            }, 1500);
+    if (user.role === "ADMIN") {
+        window.location.href = "/admin/dashboard.html";
+    } else if (user.role === "DOCTOR") {
+        window.location.href = "/doctor/dashboard.html";
+    } else if (user.role === "PATIENT") {
+        window.location.href = "/patient/dashboard.html";
+    } else {
+        // 兜底（理论不会进）
+        window.location.href = "/auth/login.html";
+    }
+}, 1500);
         })
         .catch(err => {
             document.getElementById("msg").className = "error-message";

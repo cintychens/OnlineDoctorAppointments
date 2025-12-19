@@ -156,6 +156,21 @@ public class AppointmentController {
 
         return appointmentService.getAppointmentsByPatient(patientId);
     }
+    /**
+     * Get appointments by doctor
+     * GET /api/appointments/doctor/{doctorId}
+     */
+    @Operation(
+            summary = "Get appointments by doctor",
+            description = "Retrieve all appointments for a specific doctor"
+    )
+    @GetMapping("/doctor/{doctorId}")
+    public List<Appointment> getAppointmentsByDoctor(
+            @PathVariable Long doctorId) {
+
+        return appointmentService.getAppointmentsByDoctor(doctorId);
+    }
+
 
     /**
      * Get appointment history

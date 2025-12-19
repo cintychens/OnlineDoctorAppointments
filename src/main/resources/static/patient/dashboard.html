@@ -2,93 +2,111 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Patient Dashboard</title>
+    <title>Patient Dashboard | MedCare</title>
+
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/doctor.css">
+    <link rel="stylesheet" href="/css/patient.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
 
-<div class="container">
-    <h2 class="page-title">Book Appointment</h2>
-
-    <div class="nav">
-        <a href="/patient/index.html">Home</a>
-        <a href="/patient/appointments.html">My Appointments</a>
-        <a href="/auth/login.html">Logout</a>
+<!-- ===== Top Navigation（✅ 和 Appointments / Doctors 完全一致）===== -->
+<nav class="top-nav">
+    <div class="nav-brand">
+        <i class="fas fa-user-injured"></i>
+        <span>Patient Dashboard</span>
     </div>
 
-    <div class="card">
-        <h3>Select Doctor</h3>
-        <select id="doctorSelect" onchange="loadSlots()"></select>
+    <div class="nav-user">
+        <span id="patientName">Patient</span>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
     </div>
+</nav>
 
-    <div class="card">
-        <h3>Available Time Slots</h3>
-        <select id="slotSelect"></select>
-    </div>
+<div class="doctor-container">
 
-    <div class="card">
-        <h3>Note (Optional)</h3>
-        <input type="text" id="note" placeholder="Reason or note">
-        <br><br>
-        <button class="btn btn-primary" onclick="createAppointment()">Book Appointment</button>
-    </div>
+    <!-- ===== Side Menu ===== -->
+    <aside class="side-menu">
+        <ul>
+            <li class="active">
+                <a href="/patient/index.html">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="/patient/doctors.html">
+                    <i class="fas fa-user-md"></i> Doctors
+                </a>
+            </li>
+
+            <li>
+                <a href="/patient/appointments.html">
+                    <i class="fas fa-calendar-check"></i> My Appointments
+                </a>
+            </li>
+
+            <li>
+                <a href="/patient/profile.html">
+                    <i class="fas fa-id-card"></i> Profile
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- ===== Main Content ===== -->
+    <main class="main-content">
+
+        <!-- Title Card -->
+        <div class="card">
+            <div class="card-body">
+                <h2>
+                    <i class="fas fa-home"></i>
+                    Dashboard Overview
+                </h2>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="card">
+            <div class="card-body" style="text-align:center;">
+                <i class="fas fa-calendar-check"
+                   style="font-size:24px;margin-bottom:10px;"></i>
+                <h3>My Appointments</h3>
+                <div class="stat-number" id="totalAppointments">0</div>
+            </div>
+        </div>
+
+    </main>
 </div>
 
+<!-- ===== Scripts ===== -->
+<script src="/js/patient.js"></script>
 <script>
-    const user = JSON.parse(localStorage.getItem("currentUser"));
-    if (!user || user.role !== "PATIENT") {
-        alert("Unauthorized");
-        window.location.href = "/auth/login.html";
-    }
+    let patient = null;
 
-    function loadDoctors() {
-        fetch("/api/doctors")
-            .then(res => res.json())
-            .then(doctors => {
-                const sel = document.getElementById("doctorSelect");
-                sel.innerHTML = "";
-                doctors.forEach(d => {
-                    const opt = document.createElement("option");
-                    opt.value = d.id;
-                    opt.text = d.name + " (" + d.specialty + ")";
-                    sel.appendChild(opt);
-                });
-                loadSlots();
-            });
-    }
+    document.addEventListener("DOMContentLoaded", () => {
+        patient = checkPatientAuth();
+        if (!patient) return;
 
-    function loadSlots() {
-        const doctorId = document.getElementById("doctorSelect").value;
-        fetch(`/api/timeslots/doctor/${doctorId}/available`)
-            .then(res => res.json())
-            .then(slots => {
-                const sel = document.getElementById("slotSelect");
-                sel.innerHTML = "";
-                slots.forEach(s => {
-                    const opt = document.createElement("option");
-                    opt.value = s.id;
-                    opt.text = s.startTime + " → " + s.endTime;
-                    sel.appendChild(opt);
-                });
-            });
-    }
+        const displayName = patient.name || patient.username || "Patient";
+        document.getElementById("patientName").innerText = displayName;
 
-    function createAppointment() {
-        fetch("/api/appointments", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                patientId: user.id,
-                timeSlotId: document.getElementById("slotSelect").value,
-                note: document.getElementById("note").value
-            })
-        }).then(() => {
-            alert("Appointment created");
-            window.location.href = "/patient/appointments.html";
-        });
-    }
+        const myAppointments = getMyAppointments(patient);
+        document.getElementById("totalAppointments").innerText =
+            myAppointments.length;
+    });
 
-    loadDoctors();
+    function logout() {
+        localStorage.removeItem("currentUser");
+        location.href = "/auth/login.html";
+    }
 </script>
 
 </body>

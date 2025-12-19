@@ -2,50 +2,111 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboard | MedCare</title>
+
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/doctor.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
 
-<!-- Header -->
-<div class="header">
-    <h1>Online Doctor Appointment - Admin</h1>
-    <div class="nav">
-        <a href="/admin/dashboard.html">Dashboard</a>
-        <a href="/admin/manage-doctors.html">Manage Doctors</a>
-        <a href="/auth/login.html">Logout</a>
-    </div>
-</div>
-
-<!-- Main -->
-<div class="container">
-
-    <h2 class="page-title">Admin Dashboard</h2>
-
-    <div class="card">
-        <h3 class="section-title">System Overview</h3>
-        <p>This dashboard provides administrators with a high-level overview of the system.</p>
-        <ul>
-            <li>Total registered doctors</li>
-            <li>Total registered patients</li>
-            <li>Pending appointments</li>
-            <li>System status</li>
-        </ul>
+<!-- ================= Top Navigation ================= -->
+<nav class="top-nav">
+    <div class="nav-brand">
+        <i class="fas fa-user-shield"></i>
+        <span>Admin Dashboard</span>
     </div>
 
-    <div class="card">
-        <h3 class="section-title">Quick Actions</h3>
-        <button class="btn btn-primary"
-                onclick="location.href='/admin/manage-doctors.html'">
-            Manage Doctors
+    <div class="nav-user">
+        <span id="adminName">Admin</span>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
         </button>
     </div>
+</nav>
 
+<div class="doctor-container">
+
+    <!-- ================= Side Menu ================= -->
+    <aside class="side-menu">
+        <ul>
+            <li class="active">
+                <a href="/admin/dashboard.html">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="/admin/manage-doctors.html">
+                    <i class="fas fa-user-md"></i> Manage Doctors
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- ================= Main ================= -->
+    <main class="main-content">
+
+        <!-- ===== Title ===== -->
+        <div class="card">
+            <div class="card-body">
+                <h2>
+                    <i class="fas fa-chart-line"></i>
+                    System Overview
+                </h2>
+                <p>Administrative overview of the system</p>
+            </div>
+        </div>
+
+        <!-- ===== Stats ===== -->
+        <div class="doctor-grid">
+
+            <div class="card">
+                <div class="card-body" style="text-align:center;">
+                    <i class="fas fa-user-md" style="font-size:28px;"></i>
+                    <h3>Total Doctors</h3>
+                    <div class="stat-number" id="doctorCount">0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body" style="text-align:center;">
+                    <i class="fas fa-calendar-check" style="font-size:28px;"></i>
+                    <h3>Total Appointments</h3>
+                    <div class="stat-number" id="appointmentCount">0</div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
 </div>
 
-<div class="footer">
-    © 2025 Online Doctor Appointment System
-</div>
+<!-- ================= Scripts ================= -->
+<script>
+    const DOCTOR_KEY = "system_doctors";
+    const APPOINTMENT_KEY = "doctor_appointments";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const doctors =
+            JSON.parse(localStorage.getItem(DOCTOR_KEY)) || [];
+        const appointments =
+            JSON.parse(localStorage.getItem(APPOINTMENT_KEY)) || [];
+
+        document.getElementById("doctorCount").innerText =
+            doctors.length;
+        document.getElementById("appointmentCount").innerText =
+            appointments.length;
+    });
+
+    function logout() {
+        localStorage.removeItem("currentUser");
+        location.href = "/auth/login.html";
+    }
+</script>
 
 </body>
 </html>

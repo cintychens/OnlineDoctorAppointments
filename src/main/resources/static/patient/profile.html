@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Profile | Patient</title>
+
+    <!-- ===== Global Styles ===== -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/doctor.css">   <!-- ✅ 关键：统一布局 -->
+    <link rel="stylesheet" href="/css/patient.css">
+
+    <!-- ===== Icons ===== -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+<!-- ================= Top Navigation ================= -->
+<nav class="top-nav">
+    <div class="nav-brand">
+        <i class="fas fa-user-injured"></i>
+        <span>Patient Dashboard</span>
+    </div>
+
+    <div class="nav-user">
+        <span id="patientName">Patient</span>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+</nav>
+
+<div class="doctor-container">
+
+    <!-- ================= Side Menu ================= -->
+    <aside class="side-menu">
+        <ul>
+            <li>
+                <a href="/patient/index.html">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="/patient/doctors.html">
+                    <i class="fas fa-user-md"></i> Doctors
+                </a>
+            </li>
+
+            <li>
+                <a href="/patient/appointments.html">
+                    <i class="fas fa-calendar-check"></i> My Appointments
+                </a>
+            </li>
+
+            <li class="active">
+                <a href="/patient/profile.html">
+                    <i class="fas fa-id-card"></i> Profile
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- ================= Main Content ================= -->
+    <main class="main-content">
+
+        <!-- ===== Page Header ===== -->
+        <div class="card">
+            <div class="card-body">
+                <h2>
+                    <i class="fas fa-id-card"></i>
+                    My Profile
+                </h2>
+                <p>Manage your personal information and security</p>
+            </div>
+        </div>
+
+        <!-- ===== Profile Information ===== -->
+        <div class="card">
+            <div class="card-body">
+
+                <h3>Profile Information</h3>
+
+                <div class="form-group">
+                    <label>Username</label>
+                    <input class="form-input"
+                           id="profileUsername"
+                           disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input class="form-input"
+                           id="profileDisplayName">
+                </div>
+
+                <button class="btn-primary" onclick="saveProfile()">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+
+            </div>
+        </div>
+
+        <!-- ===== Security Settings ===== -->
+        <div class="card">
+            <div class="card-body">
+
+                <h3>Security Settings</h3>
+
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password"
+                           class="form-input"
+                           id="oldPassword">
+                </div>
+
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password"
+                           class="form-input"
+                           id="newPassword">
+                </div>
+
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password"
+                           class="form-input"
+                           id="confirmPassword">
+                </div>
+
+                <button class="btn-primary" onclick="changePassword()">
+                    <i class="fas fa-key"></i> Change Password
+                </button>
+
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ================= Scripts ================= -->
+<script src="/js/patient.js"></script>
+
+<script>
+    let patient = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        patient = checkPatientAuth();
+        if (!patient) return;
+
+        const displayName = patient.name || patient.username;
+
+        // Top bar
+        document.getElementById("patientName").innerText = displayName;
+
+        // Profile info
+        document.getElementById("profileUsername").value = patient.username;
+        document.getElementById("profileDisplayName").value = displayName;
+    });
+
+    /* ===== Save Profile ===== */
+    function saveProfile() {
+        const newName =
+            document.getElementById("profileDisplayName").value.trim();
+
+        if (!newName) {
+            alert("Display name cannot be empty.");
+            return;
+        }
+
+        function saveProfile() {
+    const newName =
+        document.getElementById("profileDisplayName").value.trim();
+
+    if (!newName) {
+        alert("Display name cannot be empty.");
+        return;
+    }
+
+    // 1. 更新 currentUser
+    function saveProfile() {
+    const newName = document.getElementById("profileNameInput").value.trim();
+    if (!newName) {
+        alert("Display name cannot be empty");
+        return;
+    }
+
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+
+    const idx = users.findIndex(u => u.id === patient.id);
+    if (idx === -1) return;
+
+    users[idx].name = newName;
+
+    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("currentUser", JSON.stringify(users[idx]));
+
+    alert("Profile updated successfully");
+    document.getElementById("patientName").innerText = newName;
+}
+
+
+    // 2. 同步更新 users（核心）
+    updateUser({ username: patient.username, name: newName });
+
+    document.getElementById("patientName").innerText = newName;
+    alert("Profile updated successfully.");
+}
+   function changePassword() {
+    const oldPwd = document.getElementById("oldPassword").value;
+    const newPwd = document.getElementById("newPassword").value;
+    const confirmPwd = document.getElementById("confirmPassword").value;
+
+    if (oldPwd !== patient.password) {
+        alert("Current password is incorrect.");
+        return;
+    }
+
+    if (newPwd.length < 4) {
+        alert("New password must be at least 4 characters.");
+        return;
+    }
+
+    if (newPwd !== confirmPwd) {
+        alert("Passwords do not match.");
+        return;
+    }
+
+    // 1. 更新 currentUser
+    patient.password = newPwd;
+    localStorage.setItem("currentUser", JSON.stringify(patient));
+
+    // 2. 同步更新 users
+    updateUser({ username: patient.username, password: newPwd });
+
+    alert("Password changed successfully.");
+
+    document.getElementById("oldPassword").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("confirmPassword").value = "";
+}
+
+
+        document.getElementById("patientName").innerText = newName;
+        alert("Profile updated successfully.");
+    }
+
+    /* ===== Change Password ===== */
+    function changePassword() {
+        const oldPwd = document.getElementById("oldPassword").value;
+        const newPwd = document.getElementById("newPassword").value;
+        const confirmPwd = document.getElementById("confirmPassword").value;
+
+        if (oldPwd !== patient.password) {
+            alert("Current password is incorrect.");
+            return;
+        }
+
+        if (newPwd.length < 4) {
+            alert("New password must be at least 4 characters.");
+            return;
+        }
+
+        if (newPwd !== confirmPwd) {
+            alert("Passwords do not match.");
+            return;
+        }
+
+        patient.password = newPwd;
+        localStorage.setItem("currentUser", JSON.stringify(patient));
+
+        alert("Password changed successfully.");
+
+        document.getElementById("oldPassword").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
+    }
+</script>
+
+</body>
+</html>

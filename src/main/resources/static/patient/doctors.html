@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctors | Patient Dashboard</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/doctor.css">
+    <link rel="stylesheet" href="/css/patient.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+<!-- ================= Top Nav ================= -->
+<nav class="top-nav">
+    <div class="nav-brand">
+        <i class="fas fa-user-injured"></i>
+        <span>Patient Dashboard</span>
+    </div>
+
+    <div class="nav-user">
+        <span id="patientName">Patient</span>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+</nav>
+
+<div class="doctor-container">
+
+    <!-- ================= Side Menu ================= -->
+    <aside class="side-menu">
+        <ul>
+            <li>
+                <a href="/patient/index.html">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+
+            <li class="active">
+                <a href="/patient/doctors.html">
+                    <i class="fas fa-user-md"></i> Doctors
+                </a>
+            </li>
+
+            <li>
+                <a href="/patient/appointments.html">
+                    <i class="fas fa-calendar-check"></i> My Appointments
+                </a>
+            </li>
+
+            <li>
+                <a href="/patient/profile.html">
+                    <i class="fas fa-id-card"></i> Profile
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- ================= Main ================= -->
+    <main class="main-content">
+
+        <!-- Title -->
+        <div class="card">
+            <div class="card-body">
+                <h2>
+                    <i class="fas fa-user-md"></i>
+                    Available Doctors
+                </h2>
+                <p>Search doctors and book appointments</p>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="card">
+            <div class="card-body">
+                <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search by doctor name, department or room..."
+                        oninput="filterDoctors()"
+                        class="form-input"
+                >
+            </div>
+        </div>
+
+        <!-- Doctor List -->
+        <div class="doctor-grid" id="doctorList"></div>
+
+    </main>
+</div>
+
+<!-- ================= Doctor Detail Modal ================= -->
+<div class="modal-overlay" id="doctorModal" onclick="closeModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+
+        <div class="modal-header">
+            <h3 id="modalName"></h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <p id="modalDept"></p>
+            <p id="modalRoom"></p>
+            <p id="modalDesc"></p>
+
+            <h4>
+                <i class="fas fa-clock"></i>
+                Available Time Slots
+            </h4>
+            <div id="modalSlots"></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= Scripts ================= -->
+<script src="/js/patient.js"></script>
+<script>
+    let patient = null;
+    let doctors = [];
+
+    const DOCTOR_KEY = "system_doctors"; // ⭐ 与 Admin 统一
+
+    document.addEventListener("DOMContentLoaded", () => {
+        patient = checkPatientAuth();
+        if (!patient) return;
+
+        document.getElementById("patientName").innerText =
+            patient.name || patient.username || "Patient";
+
+        loadDoctors();
+    });
+
+    /* ===== Doctors Data (统一来源: system_doctors) ===== */
+    function loadDoctors() {
+        const all = JSON.parse(localStorage.getItem(DOCTOR_KEY)) || [];
+
+        // ⭐ 只显示 enabled=true
+        doctors = all
+            .filter(d => d.enabled)
+            .map(d => ({
+                id: d.id,
+                name: d.name,
+                department: d.specialty, // Admin 用 specialty
+                room: d.room || "Not Assigned",
+                description: d.description || "No description available.",
+                // slots 暂时兜底：你后面可以做“医生排班管理”再替换
+                slots: d.slots && d.slots.length ? d.slots : ["09:00", "10:00", "14:00"]
+            }));
+
+        renderDoctors(doctors);
+    }
+
+    /* ===== Render ===== */
+    function renderDoctors(list) {
+        const container = document.getElementById("doctorList");
+        container.innerHTML = "";
+
+        if (!list || list.length === 0) {
+            container.innerHTML = `<div class="card"><div class="card-body">
+                <p>No available doctors. Please ask admin to create/enable doctors.</p>
+            </div></div>`;
+            return;
+        }
+
+        list.forEach(d => {
+            const div = document.createElement("div");
+            div.className = "card";
+            div.innerHTML = `
+                <div class="card-body">
+                    <h3><i class="fas fa-user-md"></i> ${d.name}</h3>
+                    <p><strong>Department:</strong> ${d.department}</p>
+                    <p><strong>Room:</strong> ${d.room}</p>
+                    <p>${d.description}</p>
+
+                    <button class="btn-primary" onclick="viewDoctor(${d.id})">
+                        <i class="fas fa-eye"></i> View Details
+                    </button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    /* ===== Search ===== */
+    function filterDoctors() {
+        const keyword = document.getElementById("searchInput").value.toLowerCase();
+
+        const filtered = doctors.filter(d =>
+            d.name.toLowerCase().includes(keyword) ||
+            d.department.toLowerCase().includes(keyword) ||
+            d.room.toLowerCase().includes(keyword)
+        );
+
+        renderDoctors(filtered);
+    }
+
+    /* ===== Modal ===== */
+    function viewDoctor(id) {
+        const d = doctors.find(x => x.id === id);
+        if (!d) return;
+
+        document.getElementById("modalName").innerText = d.name;
+        document.getElementById("modalDept").innerText = "Department: " + d.department;
+        document.getElementById("modalRoom").innerText = "Room: " + d.room;
+        document.getElementById("modalDesc").innerText = d.description;
+
+        const slotBox = document.getElementById("modalSlots");
+        slotBox.innerHTML = "";
+
+        d.slots.forEach(time => {
+            const btn = document.createElement("button");
+            btn.className = "btn-primary";
+            btn.style.marginRight = "10px";
+            btn.style.marginTop = "8px";
+            btn.innerText = time;
+            btn.onclick = () => bookAppointment(d, time);
+            slotBox.appendChild(btn);
+        });
+
+        document.getElementById("doctorModal").style.display = "flex";
+    }
+
+    function closeModal() {
+        document.getElementById("doctorModal").style.display = "none";
+    }
+
+    /* ===== Booking ===== */
+    function bookAppointment(doctor, time) {
+        const date = prompt(
+            "Enter appointment date (YYYY-MM-DD):",
+            new Date().toISOString().split("T")[0]
+        );
+        if (!date) return;
+
+        const list = getAllAppointments();
+
+        list.push({
+            id: Date.now(),
+            patientName: patient.name || patient.username,
+            doctorId: doctor.id,
+            doctorName: doctor.name,
+            date,
+            time,
+            status: "pending"
+        });
+
+        localStorage.setItem("doctor_appointments", JSON.stringify(list));
+        alert("Appointment booked successfully!");
+        closeModal();
+    }
+</script>
+
+</body>
+</html>

@@ -72,6 +72,14 @@ public class AppointmentService {
     }
 
     /**
+     * Get appointments by doctor
+     */
+    public List<Appointment> getAppointmentsByDoctor(Long doctorId) {
+        return appointmentRepository.findByDoctorId(doctorId);
+    }
+
+
+    /**
      * Get all appointments
      */
     public List<Appointment> getAllAppointments() {

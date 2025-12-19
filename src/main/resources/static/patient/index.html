@@ -2,43 +2,106 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Patient Home</title>
+    <title>Patient Dashboard | MedCare</title>
+
+    <!-- Global styles -->
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/doctor.css">   <!-- ✅ 保持与 doctors/appointments 一致的布局 -->
+    <link rel="stylesheet" href="/css/patient.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
 
-<div class="container">
-    <h2 class="page-title">Patient Home</h2>
-
-    <div class="nav">
-        <a href="/patient/dashboard.html">Dashboard</a>
-        <a href="/patient/appointments.html">My Appointments</a>
-        <a href="/auth/login.html">Logout</a>
+<!-- ================= Top Nav ================= -->
+<nav class="top-nav">
+    <div class="nav-brand">
+        <i class="fas fa-user-injured"></i>
+        <span>Patient Dashboard</span>
     </div>
 
-    <div class="card">
-        <h3>Welcome</h3>
-        <p>
-            This system allows you to browse doctors, book appointments,
-            and manage your medical consultation schedule.
-        </p>
+    <div class="nav-user">
+        <span id="patientName">Patient</span>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
     </div>
+</nav>
 
-    <div class="card">
-        <h3>Quick Actions</h3>
+<div class="doctor-container">
+
+    <!-- ================= Side Menu ================= -->
+    <aside class="side-menu">
         <ul>
-            <li><a href="/patient/dashboard.html">Book a new appointment</a></li>
-            <li><a href="/patient/appointments.html">View appointment history</a></li>
+            <li class="active">
+                <a href="/patient/index.html">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="/patient/doctors.html">
+                    <i class="fas fa-user-md"></i> Doctors
+                </a>
+            </li>
+
+            <li>
+                <a href="/patient/appointments.html">
+                    <i class="fas fa-calendar-check"></i> My Appointments
+                </a>
+            </li>
+
+            <li>
+                <a href="/patient/profile.html">
+                    <i class="fas fa-id-card"></i> Profile
+                </a>
+            </li>
         </ul>
-    </div>
+    </aside>
+
+    <!-- ================= Main Content ================= -->
+    <main class="main-content">
+
+        <!-- Welcome Card -->
+        <div class="welcome-card">
+            <h1>
+                Welcome,
+                <span id="welcomeName"></span>
+            </h1>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar"></i>
+                </div>
+                <h3>My Appointments</h3>
+                <div class="stat-number" id="totalAppointments">0</div>
+            </div>
+        </div>
+
+    </main>
 </div>
 
+<!-- ================= Scripts ================= -->
+<script src="/js/patient.js"></script>
 <script>
-    const user = JSON.parse(localStorage.getItem("currentUser"));
-    if (!user || user.role !== "PATIENT") {
-        alert("Unauthorized");
-        window.location.href = "/auth/login.html";
-    }
+    document.addEventListener("DOMContentLoaded", () => {
+        const patient = checkPatientAuth();
+        if (!patient) return;
+
+        const name = patient.name || patient.username || "Patient";
+
+        document.getElementById("patientName").innerText = name;
+        document.getElementById("welcomeName").innerText = name;
+
+        const myAppointments = getMyAppointments(patient);
+        document.getElementById("totalAppointments").innerText = myAppointments.length;
+    });
 </script>
 
 </body>
