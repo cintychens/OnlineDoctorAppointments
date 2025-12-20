@@ -14,7 +14,7 @@
 
 <body>
 
-<!-- ===== Top Navigation（✅ 和 Appointments / Doctors 完全一致）===== -->
+<!-- ===== Top Navigation ===== -->
 <nav class="top-nav">
     <div class="nav-brand">
         <i class="fas fa-user-injured"></i>
@@ -22,7 +22,7 @@
     </div>
 
     <div class="nav-user">
-        <span id="patientName">Patient</span>
+        <span id="patientName"></span>
         <button class="logout-btn" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i> Logout
         </button>
@@ -63,7 +63,7 @@
     <!-- ===== Main Content ===== -->
     <main class="main-content">
 
-        <!-- Title Card -->
+        <!-- ===== Title Card ===== -->
         <div class="card">
             <div class="card-body">
                 <h2>
@@ -73,7 +73,7 @@
             </div>
         </div>
 
-        <!-- Stats -->
+        <!-- ===== My Appointments (统计) ===== -->
         <div class="card">
             <div class="card-body" style="text-align:center;">
                 <i class="fas fa-calendar-check"
@@ -83,28 +83,44 @@
             </div>
         </div>
 
+        <!-- ===== ⭐ Upcoming 7 Days Appointments（新增，JS 会渲染这里）===== -->
+        <div class="card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-calendar-week"></i>
+                    Upcoming Appointments (Next 7 Days)
+                </h3>
+                <a href="/patient/appointments.html" class="btn-secondary">
+                    View All
+                </a>
+            </div>
+
+            <div class="card-body">
+                <table class="simple-table">
+                    <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+
+                    <!-- ⭐ patient.js 就是找这个 id -->
+                    <tbody id="upcomingAppointmentsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
     </main>
 </div>
 
 <!-- ===== Scripts ===== -->
 <script src="/js/patient.js"></script>
 <script>
-    let patient = null;
-
-    document.addEventListener("DOMContentLoaded", () => {
-        patient = checkPatientAuth();
-        if (!patient) return;
-
-        const displayName = patient.name || patient.username || "Patient";
-        document.getElementById("patientName").innerText = displayName;
-
-        const myAppointments = getMyAppointments(patient);
-        document.getElementById("totalAppointments").innerText =
-            myAppointments.length;
-    });
-
     function logout() {
         localStorage.removeItem("currentUser");
+        localStorage.removeItem("current_patient");
         location.href = "/auth/login.html";
     }
 </script>

@@ -6,7 +6,7 @@
 
     <!-- Global styles -->
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/doctor.css">   <!-- ✅ 保持与 doctors/appointments 一致的布局 -->
+    <link rel="stylesheet" href="/css/doctor.css">
     <link rel="stylesheet" href="/css/patient.css">
 
     <!-- Icons -->
@@ -65,7 +65,7 @@
     <!-- ================= Main Content ================= -->
     <main class="main-content">
 
-        <!-- Welcome Card -->
+        <!-- ===== Welcome Card ===== -->
         <div class="welcome-card">
             <h1>
                 Welcome,
@@ -73,7 +73,7 @@
             </h1>
         </div>
 
-        <!-- Stats -->
+        <!-- ===== Stats ===== -->
         <div class="stats-container">
             <div class="stat-card">
                 <div class="stat-icon">
@@ -81,6 +81,35 @@
                 </div>
                 <h3>My Appointments</h3>
                 <div class="stat-number" id="totalAppointments">0</div>
+            </div>
+        </div>
+
+        <!-- ===== Upcoming 7 Days Appointments ===== -->
+        <div class="card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-calendar-week"></i>
+                    Upcoming Appointments (Next 7 Days)
+                </h3>
+                <a href="/patient/appointments.html" class="btn-secondary">
+                    View All
+                </a>
+            </div>
+
+            <div class="card-body">
+                <table class="simple-table">
+                    <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+
+                    <!-- ⭐ patient.js 会往这里渲染 -->
+                    <tbody id="upcomingAppointmentsBody"></tbody>
+                </table>
             </div>
         </div>
 
@@ -102,6 +131,12 @@
         const myAppointments = getMyAppointments(patient);
         document.getElementById("totalAppointments").innerText = myAppointments.length;
     });
+
+    function logout() {
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("current_patient");
+        location.href = "/auth/login.html";
+    }
 </script>
 
 </body>

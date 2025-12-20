@@ -91,23 +91,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const nameEl = document.getElementById("patientName");
     if (nameEl) {
-        nameEl.innerText =
-            patient.name || patient.username || "Patient";
+        nameEl.innerText = patient.name || patient.username || "Patient";
     }
 
     const path = window.location.pathname;
 
-    // 只在 doctors.html 加载医生列表
     if (path.includes("/patient/doctors.html")) {
         loadDoctors();
     }
 
-    // 只在 appointments.html 加载我的预约
+    if (path.includes("/patient/index.html")) {
+        renderUpcomingAppointmentsForDashboard(patient);
+    }
+
     if (path.includes("/patient/appointments.html")) {
         const list = getMyAppointments(patient);
         renderAppointments(list);
     }
 });
+
 
 /* =================================================
  * Doctors - Container 兜底（解决你页面 id 不一致导致的“空白”）
@@ -307,26 +309,63 @@ function getMyAppointments(patient) {
 
     return list
         .filter(a =>
-            a.patientId === patient.id ||
+            a.patientId === patient.id ||   // ✅ 保留
             a.patientName === patient.username
         )
         .sort((a, b) => {
-            // 1️⃣ 主排序：预约时间
-            const timeA = new Date(
-                `${a.date || "1970-01-01"} ${a.startTime || "00:00"}`
-            ).getTime();
-
-            const timeB = new Date(
-                `${b.date || "1970-01-01"} ${b.startTime || "00:00"}`
-            ).getTime();
-
-            if (timeA !== timeB) {
-                return timeB - timeA;   // 最新在最上
-            }
-
-            // 2️⃣ 兜底：创建时间（id = Date.now）
+            const timeA = new Date(`${a.date || "1970-01-01"} ${a.startTime || "00:00"}`).getTime();
+            const timeB = new Date(`${b.date || "1970-01-01"} ${b.startTime || "00:00"}`).getTime();
+            if (timeA !== timeB) return timeB - timeA;
             return (b.id || 0) - (a.id || 0);
         });
+}
+
+/*************************************************
+ * Dashboard - Upcoming 7 Days Appointments
+ *************************************************/
+function renderUpcomingAppointmentsForDashboard(patient) {
+    const tbody = document.getElementById("upcomingAppointmentsBody");
+    if (!tbody || !patient) return;
+
+    const all = getMyAppointments(patient);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const end = new Date(today);
+    end.setDate(today.getDate() + 7);
+
+    const upcoming = all.filter(a => {
+        if (!a.date) return false;
+        const d = new Date(a.date + "T00:00:00");
+        return d >= today && d <= end;
+    });
+
+    tbody.innerHTML = "";
+
+    if (upcoming.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" style="text-align:center;color:#999;">
+                    No upcoming appointments in the next 7 days
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    upcoming.forEach(a => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${a.date}</td>
+            <td>${a.startTime} - ${a.endTime}</td>
+            <td>${a.doctorName}</td>
+            <td style="color:${statusColor(a.status)};">
+                ${a.status}
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
 
 function cancelAppointmentByPatient(id, p) {
@@ -359,4 +398,20 @@ function escapeHtml(str) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#39;");
+}
+function isWithinNext7Days(dateStr) {
+    if (!dateStr) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const target = new Date(dateStr);
+    target.setHours(0, 0, 0, 0);
+
+    const diffDays = (target - today) / (1000 * 60 * 60 * 24);
+    return diffDays >= 0 && diffDays <= 7;
+}
+
+function getCurrentPatientName() {
+    return patient?.username || patient?.name || "";
 }
