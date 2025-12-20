@@ -6,7 +6,7 @@
 
     <!-- ===== Global Styles ===== -->
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/doctor.css">   <!-- ✅ 关键：统一布局 -->
+    <link rel="stylesheet" href="/css/doctor.css">
     <link rel="stylesheet" href="/css/patient.css">
 
     <!-- ===== Icons ===== -->
@@ -41,19 +41,16 @@
                     <i class="fas fa-home"></i> Dashboard
                 </a>
             </li>
-
             <li>
                 <a href="/patient/doctors.html">
                     <i class="fas fa-user-md"></i> Doctors
                 </a>
             </li>
-
             <li>
                 <a href="/patient/appointments.html">
                     <i class="fas fa-calendar-check"></i> My Appointments
                 </a>
             </li>
-
             <li class="active">
                 <a href="/patient/profile.html">
                     <i class="fas fa-id-card"></i> Profile
@@ -143,23 +140,22 @@
 <script src="/js/patient.js"></script>
 
 <script>
-    let patient = null;
 
     document.addEventListener("DOMContentLoaded", () => {
         patient = checkPatientAuth();
         if (!patient) return;
 
-        const displayName = patient.name || patient.username;
+        const displayName = patient.name || patient.username || "Patient";
 
         // Top bar
         document.getElementById("patientName").innerText = displayName;
 
         // Profile info
-        document.getElementById("profileUsername").value = patient.username;
+        document.getElementById("profileUsername").value = patient.username || "";
         document.getElementById("profileDisplayName").value = displayName;
     });
 
-    /* ===== Save Profile ===== */
+    /* ================= Save Profile ================= */
     function saveProfile() {
         const newName =
             document.getElementById("profileDisplayName").value.trim();
@@ -169,84 +165,28 @@
             return;
         }
 
-        function saveProfile() {
-    const newName =
-        document.getElementById("profileDisplayName").value.trim();
+        // 1. 更新 patient 对象
+        patient.name = newName;
 
-    if (!newName) {
-        alert("Display name cannot be empty.");
-        return;
-    }
+        // 2. 更新 currentUser / current_patient
+        localStorage.setItem("currentUser", JSON.stringify(patient));
+        localStorage.setItem("current_patient", JSON.stringify(patient));
 
-    // 1. 更新 currentUser
-    function saveProfile() {
-    const newName = document.getElementById("profileNameInput").value.trim();
-    if (!newName) {
-        alert("Display name cannot be empty");
-        return;
-    }
+        // 3. 同步更新 users（如果存在）
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const idx = users.findIndex(u => u.username === patient.username);
+        if (idx !== -1) {
+            users[idx].name = newName;
+            localStorage.setItem("users", JSON.stringify(users));
+        }
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-
-    const idx = users.findIndex(u => u.id === patient.id);
-    if (idx === -1) return;
-
-    users[idx].name = newName;
-
-    localStorage.setItem("users", JSON.stringify(users));
-    localStorage.setItem("currentUser", JSON.stringify(users[idx]));
-
-    alert("Profile updated successfully");
-    document.getElementById("patientName").innerText = newName;
-}
-
-
-    // 2. 同步更新 users（核心）
-    updateUser({ username: patient.username, name: newName });
-
-    document.getElementById("patientName").innerText = newName;
-    alert("Profile updated successfully.");
-}
-   function changePassword() {
-    const oldPwd = document.getElementById("oldPassword").value;
-    const newPwd = document.getElementById("newPassword").value;
-    const confirmPwd = document.getElementById("confirmPassword").value;
-
-    if (oldPwd !== patient.password) {
-        alert("Current password is incorrect.");
-        return;
-    }
-
-    if (newPwd.length < 4) {
-        alert("New password must be at least 4 characters.");
-        return;
-    }
-
-    if (newPwd !== confirmPwd) {
-        alert("Passwords do not match.");
-        return;
-    }
-
-    // 1. 更新 currentUser
-    patient.password = newPwd;
-    localStorage.setItem("currentUser", JSON.stringify(patient));
-
-    // 2. 同步更新 users
-    updateUser({ username: patient.username, password: newPwd });
-
-    alert("Password changed successfully.");
-
-    document.getElementById("oldPassword").value = "";
-    document.getElementById("newPassword").value = "";
-    document.getElementById("confirmPassword").value = "";
-}
-
-
+        // 4. 更新顶部显示
         document.getElementById("patientName").innerText = newName;
+
         alert("Profile updated successfully.");
     }
 
-    /* ===== Change Password ===== */
+    /* ================= Change Password ================= */
     function changePassword() {
         const oldPwd = document.getElementById("oldPassword").value;
         const newPwd = document.getElementById("newPassword").value;
@@ -267,11 +207,23 @@
             return;
         }
 
+        // 更新密码
         patient.password = newPwd;
+
         localStorage.setItem("currentUser", JSON.stringify(patient));
+        localStorage.setItem("current_patient", JSON.stringify(patient));
+
+        // 同步 users
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const idx = users.findIndex(u => u.username === patient.username);
+        if (idx !== -1) {
+            users[idx].password = newPwd;
+            localStorage.setItem("users", JSON.stringify(users));
+        }
 
         alert("Password changed successfully.");
 
+        // 清空输入框
         document.getElementById("oldPassword").value = "";
         document.getElementById("newPassword").value = "";
         document.getElementById("confirmPassword").value = "";
