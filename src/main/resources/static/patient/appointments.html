@@ -84,7 +84,6 @@
 <script src="/js/patient.js"></script>
 <script>
     /* ================= Page Logic ================= */
-    let patient = null;
 
     document.addEventListener("DOMContentLoaded", () => {
         patient = checkPatientAuth();
@@ -102,48 +101,68 @@
     }
 
     function renderAppointments(list) {
-        const container = document.getElementById("appointmentList");
-        container.innerHTML = "";
 
-        if (list.length === 0) {
-            container.innerHTML = `
-                <div class="card">
-                    <div class="card-body empty-text">
-                        No appointments found.
-                    </div>
-                </div>
-            `;
-            return;
+    // ⭐⭐⭐ 核心：患者视角排序（创建时间优先）
+    list = [...list].sort((a, b) => {
+
+        // ① 优先使用创建时间（如果你以后加了 createdAt）
+        const c1 = a.createdAt ?? a.id;
+        const c2 = b.createdAt ?? b.id;
+
+        if (c1 !== c2) {
+            return c2 - c1;   // 新创建的在前
         }
 
-        list.forEach(a => {
-            const div = document.createElement("div");
-            div.className = "card";
+        // ② 兜底：如果创建时间一样，再按就诊时间
+        const t1 = new Date(`${a.date} ${a.startTime}`).getTime();
+        const t2 = new Date(`${b.date} ${b.startTime}`).getTime();
 
-            div.innerHTML = `
-                <div class="card-body">
-                    <h3>
-                        <i class="fas fa-user-md"></i>
-                        ${a.doctorName}
-                    </h3>
+        return t2 - t1;
+    });
 
-                    <p><strong>Date:</strong> ${a.date}</p>
-                    <p><strong>Time:</strong> ${a.startTime} - ${a.endTime}</p>
+    const container = document.getElementById("appointmentList");
+    container.innerHTML = "";
 
-                    <p>
-                        <strong>Status:</strong>
-                        <span style="color:${statusColor(a.status)};font-weight:600;">
-                            ${a.status}
-                        </span>
-                    </p>
-
-                    ${renderPatientActions(a)}
+    if (list.length === 0) {
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-body empty-text">
+                    No appointments found.
                 </div>
-            `;
-
-            container.appendChild(div);
-        });
+            </div>
+        `;
+        return;
     }
+
+    list.forEach(a => {
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+            <div class="card-body">
+                <h3>
+                    <i class="fas fa-user-md"></i>
+                    ${a.doctorName}
+                </h3>
+
+                <p><strong>Date:</strong> ${a.date}</p>
+                <p><strong>Time:</strong> ${a.startTime} - ${a.endTime}</p>
+
+                <p>
+                    <strong>Status:</strong>
+                    <span style="color:${statusColor(a.status)};font-weight:600;">
+                        ${a.status}
+                    </span>
+                </p>
+
+                ${renderPatientActions(a)}
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
 
     function renderPatientActions(a) {
         if (a.status !== "pending") {

@@ -97,12 +97,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const path = window.location.pathname;
 
-    // ✅ 只在 doctors.html 加载医生列表
+    // 只在 doctors.html 加载医生列表
     if (path.includes("/patient/doctors.html")) {
         loadDoctors();
     }
-});
 
+    // 只在 appointments.html 加载我的预约
+    if (path.includes("/patient/appointments.html")) {
+        const list = getMyAppointments(patient);
+        renderAppointments(list);
+    }
+});
 
 /* =================================================
  * Doctors - Container 兜底（解决你页面 id 不一致导致的“空白”）
@@ -275,7 +280,7 @@ function bookAppointment(doctor, schedule) {
     list.push({
         id: Date.now(),
         patientId: patient.id,
-        patientName: patient.name || patient.username,
+        patientName: patient.username,
         doctorId: doctor.id,
         doctorName: doctor.name,
 
@@ -295,13 +300,33 @@ function bookAppointment(doctor, schedule) {
 /* =================================================
  * Appointments helpers (appointments.html 会用到)
  * ================================================= */
-function getMyAppointments(p) {
+function getMyAppointments(patient) {
+    if (!patient) return [];
+
     const list = JSON.parse(localStorage.getItem(APPOINTMENT_KEY)) || [];
 
-    return list.filter(a =>
-        // 用 patientName 作为主匹配（你系统里最稳定）
-        a.patientName === (p.name || p.username)
-    );
+    return list
+        .filter(a =>
+            a.patientId === patient.id ||
+            a.patientName === patient.username
+        )
+        .sort((a, b) => {
+            // 1️⃣ 主排序：预约时间
+            const timeA = new Date(
+                `${a.date || "1970-01-01"} ${a.startTime || "00:00"}`
+            ).getTime();
+
+            const timeB = new Date(
+                `${b.date || "1970-01-01"} ${b.startTime || "00:00"}`
+            ).getTime();
+
+            if (timeA !== timeB) {
+                return timeB - timeA;   // 最新在最上
+            }
+
+            // 2️⃣ 兜底：创建时间（id = Date.now）
+            return (b.id || 0) - (a.id || 0);
+        });
 }
 
 function cancelAppointmentByPatient(id, p) {

@@ -289,5 +289,12 @@
 .main-content {
     flex: 1;
 }
+.doctor-container .doctor-grid {
+    display: flex;
+    flex-direction: column !important;
+    gap: 16px;
+}
+
+
 
 
