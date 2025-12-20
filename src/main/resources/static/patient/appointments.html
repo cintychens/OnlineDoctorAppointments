@@ -74,6 +74,32 @@
             </div>
         </div>
 
+        <!-- ===== Status Filter ===== -->
+        <div class="card">
+            <div class="card-body form-row">
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <select class="form-input" id="filterStatus">
+                        <option value="ALL">All</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="align-self:flex-end;">
+                    <button class="btn-primary" onclick="applyFilter()">
+                        <i class="fas fa-filter"></i> Apply
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+
         <!-- Appointment List -->
         <div class="doctor-grid" id="appointmentList"></div>
 
@@ -95,43 +121,61 @@
     });
 
     function loadAppointments() {
-        const list = getMyAppointments(patient);
-        renderAppointments(list);
-    }
+    allAppointments = getMyAppointments(patient);
+    renderAppointments(allAppointments);
+}
 
     function renderAppointments(list) {
 
-        // ⭐ Patient 视角排序：新建优先
-        list = [...list].sort((a, b) => {
-            const c1 = a.createdAt ?? a.id;
-            const c2 = b.createdAt ?? b.id;
-            return c2 - c1;
-        });
+    const container = document.getElementById("appointmentList");
+    container.innerHTML = "";
 
-        const container = document.getElementById("appointmentList");
-        container.innerHTML = "";
-
-        if (list.length === 0) {
-            container.innerHTML = `
-                <div class="card">
-                    <div class="card-body empty-text">
-                        No appointments found.
-                    </div>
+    if (!list || list.length === 0) {
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-body empty-text">
+                    No appointments found.
                 </div>
-            `;
-            return;
-        }
+            </div>
+        `;
+        return;
+    }
 
-        list.forEach(a => {
+    const groups = groupAppointmentsByStatus(list);
+
+    const statusOrder = [
+        { key: "pending", label: "Pending Appointments" },
+        { key: "confirmed", label: "Confirmed Appointments" },
+        { key: "completed", label: "Completed Appointments" },
+        { key: "rejected", label: "Rejected Appointments" },
+        { key: "cancelled", label: "Cancelled Appointments" }
+    ];
+
+    statusOrder.forEach(group => {
+        const items = groups[group.key];
+        if (!items || items.length === 0) return;
+
+        // ===== 状态标题 =====
+        const title = document.createElement("h3");
+        title.style.margin = "20px 0 10px";
+        title.style.color = "#333";
+        title.innerHTML = `
+            <i class="fas fa-tag"></i>
+            ${group.label}
+        `;
+        container.appendChild(title);
+
+        // ===== 该状态下的预约卡片 =====
+        items.forEach(a => {
             const div = document.createElement("div");
             div.className = "card";
 
             div.innerHTML = `
                 <div class="card-body">
-                    <h3>
+                    <h4>
                         <i class="fas fa-user-md"></i>
                         ${a.doctorName}
-                    </h3>
+                    </h4>
 
                     <p><strong>Date:</strong> ${a.date}</p>
                     <p><strong>Time:</strong> ${a.startTime} - ${a.endTime}</p>
@@ -146,10 +190,22 @@
                     ${renderPatientActions(a)}
                 </div>
             `;
-
             container.appendChild(div);
         });
+    });
+}
+
+    function applyFilter() {
+    const status = document.getElementById("filterStatus").value;
+
+    if (status === "ALL") {
+        renderAppointments(allAppointments);
+        return;
     }
+
+    const filtered = allAppointments.filter(a => a.status === status);
+    renderAppointments(filtered);
+}
 
     function renderPatientActions(a) {
         if (a.status !== "pending") {
@@ -177,6 +233,24 @@
 
         loadAppointments();
     }
+
+    function groupAppointmentsByStatus(list) {
+    const groups = {
+        pending: [],
+        confirmed: [],
+        completed: [],
+        rejected: [],
+        cancelled: []
+    };
+
+    list.forEach(a => {
+        if (groups[a.status]) {
+            groups[a.status].push(a);
+        }
+    });
+
+    return groups;
+}
 
     function logout() {
         localStorage.removeItem("currentUser");
