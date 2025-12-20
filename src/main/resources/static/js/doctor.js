@@ -12,7 +12,11 @@
 
 const STORAGE_KEY = "doctor_appointments";
 const DOCTOR_KEY = "current_doctor";
+const currentDoctor =
+    JSON.parse(localStorage.getItem("current_doctor")) ||
+    JSON.parse(localStorage.getItem("currentUser"));
 
+let currentFilteredList = null;
 /* =================================================
  * 登录态
  * ================================================= */
@@ -81,7 +85,8 @@ function sortByDateTimeDesc(list) {
  * ================================================= */
 function updateAppointmentStatus(id, newStatus) {
     const list = getAllAppointments();
-    const appt = list.find(a => a.id === id);
+    const appt = list.find(a => Number(a.id) === Number(id));
+
     if (appt) {
         appt.status = newStatus;
         saveAppointments(list);
@@ -253,14 +258,59 @@ function renderActionButtons(a) {
             </button>
         `;
     }
+
     if (a.status === "confirmed") {
         return `
             <button class="btn-secondary" onclick="completeAppointment(${a.id})">
                 Complete
             </button>
+            <button class="btn-danger" onclick="rejectAppointment(${a.id})">
+                Reject
+            </button>
         `;
     }
+
     return `<em>-</em>`;
+}
+function applyDoctorAppointmentFilter() {
+    const status = document.getElementById("filterStatus").value;
+    const date = document.getElementById("filterDate").value;
+
+    const normalize = (s) => {
+        if (!s) return "";
+        return s.trim().toLowerCase();
+    };
+
+    // ✅ 明确：每个筛选项对应哪些真实状态
+    const STATUS_MAP = {
+        cancelled: ["cancelled", "canceled"],
+        rejected: ["rejected"],
+        pending: ["pending"],
+        confirmed: ["confirmed"],
+        completed: ["completed"]
+    };
+
+    let filtered = getAllAppointments().filter(a => {
+        const apptStatus = normalize(a.status);
+
+        // ===== 状态筛选 =====
+        if (status !== "ALL") {
+            const allowed = STATUS_MAP[status];
+            if (!allowed || !allowed.includes(apptStatus)) {
+                return false;
+            }
+        }
+
+        // ===== 日期筛选 =====
+        if (date && a.date !== date) {
+            return false;
+        }
+
+        return true;
+    });
+
+    currentFilteredList = filtered;
+    renderAppointmentsTableWithList("appointmentsBody", filtered);
 }
 
 function acceptAppointment(id) {
@@ -282,8 +332,10 @@ function completeAppointment(id) {
  * 工具
  *************************************************/
 function capitalize(str) {
+    if (!str) return "-";
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
 
 /*************************************************
  * 页面加载
@@ -294,14 +346,39 @@ document.addEventListener("DOMContentLoaded", () => {
         location.href = "/auth/login.html";
         return;
     }
+
+    const applyBtn = document.getElementById("applyFilterBtn");
+    if (applyBtn) {
+        applyBtn.addEventListener("click", applyDoctorAppointmentFilter);
+    }
+
     notifyDoctorPages();
 });
 
 function notifyDoctorPages() {
     if (document.getElementById("appointmentsBody")) {
-        renderAppointmentsTable("appointmentsBody");
+
+        // ✅ 如果有筛选结果，优先用筛选结果
+        if (Array.isArray(currentFilteredList)) {
+            renderAppointmentsTableWithList(
+                "appointmentsBody",
+                currentFilteredList
+            );
+        } else {
+            renderAppointmentsTable("appointmentsBody");
+        }
     }
-    if (typeof renderDoctorDashboard === "function") {
+
+    if (document.getElementById("todayCount") &&
+        typeof renderDoctorDashboard === "function") {
         renderDoctorDashboard();
     }
+
 }
+window.logout = function () {
+    if (confirm("Are you sure you want to logout?")) {
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("current_doctor");
+        location.href = "/auth/login.html";
+    }
+};

@@ -78,10 +78,12 @@
                         <option value="ALL">All</option>
                         <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>
+                        <option value="cancelled">Cancelled</option>
                         <option value="rejected">Rejected</option>
                         <option value="completed">Completed</option>
                     </select>
                 </div>
+
 
                 <div class="form-group">
                     <label>Date</label>
@@ -89,9 +91,10 @@
                 </div>
 
                 <div class="form-group" style="align-self: flex-end;">
-                    <button class="btn-primary" onclick="applyDoctorAppointmentFilter()">
+                    <button class="btn-primary" id="applyFilterBtn">
                         <i class="fas fa-filter"></i> Apply
                     </button>
+
                 </div>
 
             </div>
@@ -124,44 +127,6 @@
 
 <!-- ================= Scripts ================= -->
 <script src="/js/doctor.js"></script>
-
-<script>
-    /* =================================================
-     * Filters（完全保持你原逻辑）
-     * ================================================= */
-    function applyDoctorAppointmentFilter() {
-        const status = document.getElementById("filterStatus").value;
-        const date = document.getElementById("filterDate").value;
-
-        const list = getAllAppointments().filter(a =>
-            a.doctorName === (currentDoctor.name || currentDoctor.username)
-        );
-
-        let filtered = list;
-
-        if (status !== "ALL") {
-            filtered = filtered.filter(a => a.status === status);
-        }
-
-        if (date) {
-            filtered = filtered.filter(a => a.date === date);
-        }
-
-        renderAppointmentsTableWithList("appointmentsBody", filtered);
-    }
-
-    /* =================================================
-     * Logout（只清理 doctor 自己）
-     * ================================================= */
-    function logout() {
-        if (confirm("Are you sure you want to logout?")) {
-            localStorage.removeItem("currentUser");
-            localStorage.removeItem("current_doctor");
-            location.href = "/auth/login.html";
-        }
-    }
-</script>
-
 
 </body>
 </html>
