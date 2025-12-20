@@ -23,7 +23,8 @@
     </div>
 
     <div class="nav-user">
-        <span id="doctorName">Doctor</span>
+        <!-- ⚠️ 不写死医生名，交给 doctor.js 渲染 -->
+        <span id="doctorName"></span>
         <button class="logout-btn" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i> Logout
         </button>
@@ -127,18 +128,16 @@
 <script src="/js/doctor.js"></script>
 
 <script>
-
     /* =================================================
      * Logout
      * ================================================= */
     function logout() {
-    if (confirm("Are you sure you want to logout?")) {
-        localStorage.removeItem("currentUser");
-        localStorage.removeItem("current_doctor"); // ⭐ 必须
-        location.href = "/auth/login.html";
+        if (confirm("Are you sure you want to logout?")) {
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("current_doctor");
+            location.href = "/auth/login.html";
+        }
     }
-}
-
 </script>
 
 </body>

@@ -68,7 +68,7 @@
             </div>
         </div>
 
-        <!-- ===== Filters（UI only） ===== -->
+        <!-- ===== Filters ===== -->
         <div class="card">
             <div class="card-body form-row">
 
@@ -83,6 +83,7 @@
                         <option value="completed">Completed</option>
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label>Doctor Name</label>
                     <input
@@ -99,10 +100,9 @@
                 </div>
 
                 <div class="form-group" style="align-self: flex-end;">
-                    <button class="btn-primary" id="applyFilterBtn">
+                    <button class="btn-primary" id="applyFilterBtn" type="button">
                         <i class="fas fa-filter"></i> Apply
                     </button>
-
                 </div>
 
             </div>
@@ -123,7 +123,7 @@
                     </tr>
                     </thead>
 
-                    <!-- ⚠️ tbody 由 doctor.js 统一渲染 -->
+                    <!-- 由 doctor.js 渲染 -->
                     <tbody id="appointmentsBody"></tbody>
                 </table>
 

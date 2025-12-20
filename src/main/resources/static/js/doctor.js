@@ -126,6 +126,9 @@ function renderTodayAppointments() {
     if (!tbody) return;
 
     const today = new Date().toISOString().split("T")[0];
+    const doctor = getCurrentDoctor();
+    const doctorName = doctor?.name || doctor?.username || "";
+
     const list = sortByDateTimeDesc(
         getAllAppointments().filter(a => a.date === today)
     );
@@ -146,16 +149,9 @@ function renderTodayAppointments() {
     list.forEach(a => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>
-                ${
-                    a.startTime
-                        ? `${a.startTime} - ${a.endTime}`
-                        : (a.time || "-")
-                }
-            </td>
-
+            <td>${a.startTime ? `${a.startTime} - ${a.endTime}` : a.time}</td>
             <td>${a.patientName}</td>
-            <td>${a.doctorName || "-"}</td>
+            <td>${a.doctorName}</td>
             <td>
                 <span class="badge ${a.status}">
                     ${capitalize(a.status)}
