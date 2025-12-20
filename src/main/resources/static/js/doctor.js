@@ -275,34 +275,30 @@ function renderActionButtons(a) {
 function applyDoctorAppointmentFilter() {
     const status = document.getElementById("filterStatus").value;
     const date = document.getElementById("filterDate").value;
+    const doctorNameInput =
+        document.getElementById("filterDoctorName")?.value || "";
 
-    const normalize = (s) => {
-        if (!s) return "";
-        return s.trim().toLowerCase();
-    };
+    const normalize = (s) => (s || "").trim().toLowerCase();
 
-    // ✅ 明确：每个筛选项对应哪些真实状态
-    const STATUS_MAP = {
-        cancelled: ["cancelled", "canceled"],
-        rejected: ["rejected"],
-        pending: ["pending"],
-        confirmed: ["confirmed"],
-        completed: ["completed"]
-    };
+    const selectedStatus = normalize(status);
+    const doctorKeyword = normalize(doctorNameInput);
 
     let filtered = getAllAppointments().filter(a => {
         const apptStatus = normalize(a.status);
+        const apptDoctor = normalize(a.doctorName);
 
-        // ===== 状态筛选 =====
-        if (status !== "ALL") {
-            const allowed = STATUS_MAP[status];
-            if (!allowed || !allowed.includes(apptStatus)) {
-                return false;
-            }
+        // 1️⃣ 状态筛选
+        if (status !== "ALL" && apptStatus !== selectedStatus) {
+            return false;
         }
 
-        // ===== 日期筛选 =====
+        // 2️⃣ 日期筛选
         if (date && a.date !== date) {
+            return false;
+        }
+
+        // 3️⃣ 医生姓名模糊搜索（核心）
+        if (doctorKeyword && !apptDoctor.includes(doctorKeyword)) {
             return false;
         }
 
